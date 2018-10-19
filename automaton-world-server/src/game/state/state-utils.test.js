@@ -54,7 +54,7 @@ describe('state-utils', () => {
     test('returns correct values, basic case', () => {
       expect(getRowAndColumnFromIndex(grid_4x5_cols, 13)).toEqual({row: 2, col: 3});
     });
-  })
+  });
 
   describe('getIndexFromRowAndColumn', () => {
     test('returns correct values, basic case', () => {
