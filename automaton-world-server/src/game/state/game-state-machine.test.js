@@ -3,10 +3,11 @@ const createGameStateMachine = require('./game-state-machine');
 const rows = 9, cols = 14;
 
 describe('GameStateMachine', () => {
-  const players = [{id: 'ABC', name: 'boris'}, {id: 'DEF', name: 'fnord'}, {
-    id: 'GHI',
-    name: 'quux'
-  }];
+  const players = [
+    {id: 'ABC', name: 'boris'},
+    {id: 'DEF', name: 'fnord'},
+    { id: 'GHI', name: 'quux' }
+    ];
 
   describe('constructor', () => {
     const rows = 9, cols = 14;
@@ -52,14 +53,19 @@ describe('GameStateMachine', () => {
       const gameStateMachine = createGameStateMachine(rows, cols);
       players.forEach(val => gameStateMachine.addPlayer(val.id, val));
       expect(gameStateMachine.getNumberOfPlayers()).toBe(3);
-      gameStateMachine.start()
-        .then(() => {
-          expect(gameStateMachine.getCurrentState()).toBe('running');
-        });
+      const startPromise = gameStateMachine.start();
+
       expect(gameStateMachine.acceptPlayerAcknowledgment(players[0].id)).toBe(true);
       // intentionally out of sequence
       expect(gameStateMachine.acceptPlayerAcknowledgment(players[2].id)).toBe(true);
       expect(gameStateMachine.acceptPlayerAcknowledgment(players[1].id)).toBe(true);
+      return startPromise
+        .then(() => {
+          expect(gameStateMachine.getCurrentState()).toBe('processingFrame');
+        })
+        .catch(e => {
+          expect(e).toBeNull();
+        });
     });
 
     // TODO: either this test or the tests above work, but not both; determine what the collision is

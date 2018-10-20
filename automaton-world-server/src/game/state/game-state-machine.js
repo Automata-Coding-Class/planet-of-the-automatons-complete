@@ -1,67 +1,11 @@
 const logger = require('../../logger');
+const createPendingStateManager = require('./pending-state-manager');
+const createGameBoard = require('./game-board');
 
-function createPendingStateManager(nextAction, failureAction = () => {}, timeoutInterval = 1000) {
-  let resolverFunction = undefined,
-    rejectionFunction = undefined,
-    timeout = undefined;
+module.exports = function createGameStateMachine(rows, columns) {
+  const states = require('./game-states')();
 
-  function makePromiseHandler(resolvePromise, rejectPromise) {
-    resolverFunction = resolvePromise;
-    rejectionFunction = rejectPromise;
-    timeout = setTimeout(() => {
-      const message = 'promise handler has timed out';
-      // if(rejectionFunction !== undefined) rejectionFunction({type: 'error', message: message});
-      reject(message);
-    }, timeoutInterval);
-  }
-
-  function resolve() {
-    if (nextAction !== undefined) nextAction();
-    if(timeout !== undefined) {
-      clearTimeout(timeout);
-      timeout = undefined;
-    }
-    if (resolverFunction !== undefined) {
-      resolverFunction();
-      resolverFunction = undefined;
-    }
-  }
-
-  function reject(message) {
-    failureAction();
-    if(rejectionFunction !== undefined) rejectionFunction({type: 'error', message: message});
-  }
-
-  return {
-    makePromiseHandler: makePromiseHandler,
-    resolve: resolve
-  }
-}
-
-module.exports = function createGameStateMachine(rows, cols) {
-  const states = (() => {
-    const stateObj = {};
-    stateObj.errorCondition = {name: 'error', permissibleNextStates: []};
-    stateObj.starting = {
-      name: 'starting',
-      permissibleNextStates: [stateObj.running, stateObj.errorCondition]
-    };
-    stateObj.stopped = {
-      name: 'stopped',
-      permissibleNextStates: [stateObj.starting, stateObj.running, stateObj.errorCondition]
-    };
-    stateObj.running = {
-      name: 'running',
-      permissibleNextStates: [stateObj.stopped, stateObj.errorCondition]
-    };
-    stateObj.processingFrame = {
-      name: 'processingFrame',
-      permissibleNextStates: [stateObj.running, stateObj.awaitingFrameResponse, stateObj.errorCondition]
-    };
-    stateObj.awaitingFrameResponse = {name: 'awaitingFrameResponse',};
-    return stateObj;
-  })();
-
+  let allowSameStateTransitions = false;
   let currentState = states.stopped;
 
   function getCurrentState() {
@@ -70,11 +14,15 @@ module.exports = function createGameStateMachine(rows, cols) {
 
   function enterErrorCondition(message, ...data) {
     logger.info(`GameStateMachine.enterErrorCondition: ${message}, ${JSON.stringify(data)}`);
+    if (playerAcknowledgementPromiseManager !== undefined)
+      playerAcknowledgementPromiseManager.reject(message);
     currentState = states.errorCondition;
   }
 
   function setState(newState) {
-    if (currentState.permissibleNextStates.includes(newState)) {
+    if (allowSameStateTransitions && newState === currentState) {
+      // do nothing
+    } else if (currentState.permissibleNextStates.includes(newState)) {
       currentState = newState;
     } else {
       enterErrorCondition(`invalid state transition (from ${currentState.name} to ${newState.name})`);
@@ -118,13 +66,15 @@ module.exports = function createGameStateMachine(rows, cols) {
 
   let playerAcknowledgementPromiseManager = createPendingStateManager(run, () => setState(states.errorCondition));
 
+  let gameBoard;
   function start() {
     setState(states.starting);
+    gameBoard = createGameBoard(rows, columns);
     return new Promise(playerAcknowledgementPromiseManager.makePromiseHandler);
   }
 
   function run() {
-    setState(states.running);
+    setState(states.processingFrame);
   }
 
   function reset() {
@@ -138,7 +88,7 @@ module.exports = function createGameStateMachine(rows, cols) {
   }
 
   return {
-    size: {rows: rows, cols: cols},
+    size: {rows: rows, cols: columns},
     getCurrentState: getCurrentState,
     addPlayer: addPlayer,
     getNumberOfPlayers: getNumberOfPlayers,
