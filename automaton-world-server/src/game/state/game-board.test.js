@@ -117,11 +117,11 @@ describe('GameBoard', () => {
     // │   │ t │ a │ p │
     // └───┴───┴───┴───┘
     const savedState = generateState('eoee_epeo_oaee_etap');
-    const gameBoard = createGameBoard(4, 4);
-    gameBoard.loadState(savedState);
 
     test('frameResponse with successful moves to empty cells', () => {
-      expect.assertions(2);
+      expect.assertions(5);
+      const gameBoard = createGameBoard(4, 4);
+      gameBoard.loadState(savedState);
       const expectedState = generateState('eoee_peeo_oaep_etae');
       const frameResponses = [
         {id: 'player_0', action: {type: 'move', direction: 'left'}},
@@ -129,15 +129,66 @@ describe('GameBoard', () => {
       ];
       // const expectedResultState =
       return gameBoard.processFrameResponses(frameResponses)
-        .then(currentState => {
-          expect(currentState).not.toBeNull();
-          // console.log(`current state:`, currentState);
-          expect(currentState).toMatchObject(expectedState);
+        .then(processedResponse => {
+          expect(processedResponse.updatedState).not.toBeNull();
+          expect(processedResponse.updatedState).toMatchObject(expectedState);
+          expect(processedResponse.changeSummary.length).toBe(2);
+          expect(processedResponse.changeSummary[0])
+            .toMatchObject({change: 'move', type: 'player', playerId: 'player_0', from: 5, to: 4});
+          expect(processedResponse.changeSummary[1])
+            .toMatchObject({change: 'move', type: 'player', playerId: 'player_1', from: 15, to: 11});
+        });
+    });
+
+    test('frameResponse with unsuccessful move to blocked cells and edges', () => {
+      expect.assertions(2);
+      const gameBoard = createGameBoard(4, 4);
+      gameBoard.loadState(savedState);
+      const frameResponses = [
+        {id: 'player_0', action: {type: 'move', direction: 'up'}},
+        {id: 'player_1', action: {type: 'move', direction: 'right'}},
+      ];
+      // const expectedResultState =
+      return gameBoard.processFrameResponses(frameResponses)
+        .then(processedResponse => {
+          // board should be unchanged
+          expect(processedResponse.updatedState).toMatchObject(savedState);
+          expect(processedResponse.changeSummary).toMatchObject([])
         })
         .catch(e => {
           // console.log(`e:`, e);
           expect(e.Received).not.toBeNull();
         });
+    });
+
+    test('frameResponse with move to / collection of asset', () => {
+      // expect.assertions(2);
+      const gameBoard = createGameBoard(4, 4);
+      gameBoard.loadState(savedState);
+      const expectedState = generateState('eoee_eeeo_opee_etpe');
+      const frameResponses = [
+        {id: 'player_0', action: {type: 'move', direction: 'down'}},
+        {id: 'player_1', action: {type: 'move', direction: 'left'}},
+      ];
+      // const expectedResultState =
+      return gameBoard.processFrameResponses(frameResponses)
+        .then(processedResponse => {
+          // board should be unchanged
+          expect(processedResponse.updatedState).toMatchObject(expectedState);
+          expect(processedResponse.changeSummary).toHaveLength(4);
+          expect(processedResponse.changeSummary).toContainEqual({change: 'move', type: 'player', playerId: 'player_0', from: 5, to: 9});
+          expect(processedResponse.changeSummary).toContainEqual({change: 'move', type: 'player', playerId: 'player_1', from: 15, to: 14});
+          expect(processedResponse.changeSummary).toContainEqual({
+            change: 'acquisition',
+            playerId: 'player_0',
+            acquired: {type: 'asset', id: 'asset_0'}});
+          expect(processedResponse.changeSummary).toContainEqual({change: 'acquisition', playerId: 'player_1', acquired: expect.anything()});
+
+        });
+        // .catch(e => {
+        //   // console.log(`e:`, e);
+        //   expect(e.Received).toBeDefined();
+        // });
     })
   })
 });
