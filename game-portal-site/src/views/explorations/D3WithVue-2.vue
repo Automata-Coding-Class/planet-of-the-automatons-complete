@@ -12,7 +12,7 @@ import GridWithD3 from '../../components/explorations/d3/GridWithD3.vue'
 export default {
   name: 'explorations',
   components: {
-    GridWithD3
+    GridWithD3,
   },
   data() {
     return {
