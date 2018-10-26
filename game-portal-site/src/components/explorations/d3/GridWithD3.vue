@@ -7,6 +7,9 @@
                 <path class="grid-lines" :d="gridLines"></path>
             </g>
         </svg>
+        <p>My inspiration: <a
+                href="https://bl.ocks.org/cagrimmett/07f8c8daea00946b9e704e3efcbd5739">Let's Make a
+            Grid with D3.js</a> (but it's kinda terrible. which is what inspired me)</p>
     </div>
 </template>
 
@@ -20,8 +23,20 @@
         width: 0,
         height: 0,
         maxWidth: 960,
-        rows: 24,
-        columns: 24,
+      }
+    },
+    props: {
+      minimumWidth: {
+        type: Number,
+        default: 240
+      },
+      rows: {
+        type: Number,
+        default: 24
+      },
+      columns: {
+        type: Number,
+        default: 24
       }
     },
     mounted() {
@@ -44,7 +59,7 @@
     },
     methods: {
       onResize() {
-        this.width = Math.min(this.$el.offsetWidth * .8, this.maxWidth);
+        this.width = Math.max(Math.min(this.$el.offsetWidth * .8, this.maxWidth), this.minimumWidth);
         this.height = this.width;
       },
     },
