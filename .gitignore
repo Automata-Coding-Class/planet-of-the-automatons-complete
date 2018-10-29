@@ -73,3 +73,6 @@ typings/
 # next.js build output
 .next
 
+# local explorations
+electron-api-demos-1.5.1
+
