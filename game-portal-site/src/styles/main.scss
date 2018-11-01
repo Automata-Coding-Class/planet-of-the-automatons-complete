@@ -1,3 +1,10 @@
+$border-color: gainsboro;
+$body-color: #2c3e50;
+$component-border: solid 1px $border-color;
+$rollover-color: orange;
+
+@import '~bootstrap/scss/bootstrap.scss';
+
 body {
   background-color: white;
 }
@@ -16,34 +23,98 @@ blockquote {
     font-family: 'Avenir', Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    color: #2c3e50;
-  .home {
-    text-align: center;
+  #banner {
+    @include make-row();
+    nav {
+      @include make-col-ready();
+      @include make-col(10);
+      a {
+        font-weight: bold;
+        color: #2c3e50;
+        &.router-link-exact-active {
+          color: #42b983;
+        }
+      }
+      & > a {
+        margin-right: 0.5em;
+        &::after {
+          content: " |";
+          color: $body-color;
+        }
+      }
+    }
+    .login-status {
+      @include make-col-ready();
+      @include make-col(2);
+      .sign-out {
+        &:hover {
+          cursor: pointer;
+          color: $rollover-color;
+        }
+      }
+    }
+    nav, .login-status {
+      padding: 15px 30px;
+    }
+  }
+  .main-view {
+    @include make-row();
+    padding: 0 30px;
+    .content.main {
+      @include make-col-ready();
+      @include make-col(9);
+      & > .component {
+        border: $component-border;
+      }
+      .login {
+        border: none;
+        max-width: 600px;
+      }
+      .game-board {
+        svg {
+          border: solid 1px gainsboro;
+          margin: 25px;
+          path {
+            fill: none;
+            stroke: #76BF8A;
+            stroke-width: 3px;
+          }
+          &.stacked-area {
+            path.line {
+              stroke: magenta
+            }
+            path.selector {
+              stroke: aqua;
+            }
+            path.area {
+              fill: beige;
+            }
+          }
+          &.game-view {
+            .grid {
+              path.grid-lines {
+                stroke-width: 1px;
+                stroke: $border-color;
+              }
+            }
+          }
+        }
+      }
+    }
+    .content.sidebar {
+      @include make-col-ready();
+      @include make-col(3);
+    }
   }
   .demos {
     &.d3 {
       svg {
         border: solid 1px gainsboro;
         margin: 25px;
-        path {
-          fill: none;
-          stroke: #76BF8A;
-          stroke-width: 3px;
-        }
-        &.stacked-area {
-          path.line {
-            stroke: magenta
-          }
-          path.selector {
-            stroke: aqua;
-          }
-          path.area {
-            fill: beige;
-          }
-        }
         &.grid-demo {
           .grid {
             path.grid-lines {
+              fill: none;
               stroke-width: 1px;
               stroke: gainsboro;
             }
@@ -52,15 +123,5 @@ blockquote {
       }
     }
   }
-  #nav {
-    padding: 30px;
-    text-align: center;
-    a {
-      font-weight: bold;
-      color: #2c3e50;
-      &.router-link-exact-active {
-        color: #42b983;
-      }
-    }
-  }
+
 }

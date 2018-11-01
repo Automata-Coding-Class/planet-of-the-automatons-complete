@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+  </head>
+  <body>
+    <h1><%= title %></h1>
+    <p>Welcome to <%= title %></p>
+  <p>
+    <button onclick="doIt()">Do It</button></p>
+
+  <h3>Messages</h3>
+  <ul id="messageList">
+  </ul>
+  </body>
+</html>
+<!--<script src="../node_modules/socket.io-client/dist/socket.io.js"></script>-->
+<script src="socket.io.js"></script>
+<script>
+  // console.log('will connect');
+  // var socket = io();
+  // socket.on('connect', function() {
+  //    socket.emit('loginData', { username: 'server' });
+  // });
+  // socket.on('userStatus', function(data) {
+  //     document.getElementById('messageList').innerHTML += `<li><strong>${data.username}</strong> ${data.message}</em></li>`;
+  // });
+  // socket.on('announcement', function(msg) {
+  //     console.log('announcement received:', msg);
+  //     document.getElementById('messageList').innerHTML += `<li>announcement received: ${msg}</li>`;
+  // });
+  // socket.on('data', function(data) {
+  //     console.log('data received:', data);
+  //     document.getElementById('messageList').innerHTML += `<li>data received: ${data}</li>`;
+  // });
+  // socket.on('message', function(msg) {
+  //     console.log('message received:', msg);
+  //     document.getElementById('messageList').innerHTML += `<li><strong>${msg.sender}</strong>: <em>${msg.message}</em></li>`;
+  // });
+  //
+  function doIt() {
+      console.log('will \'do it\'...');
+      socket.emit('message', 'hoo. ha.');
+  }
+</script>

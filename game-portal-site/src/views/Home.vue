@@ -1,18 +1,28 @@
 <template>
   <div class="home">
-    <img alt="Vue logo" src="../assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+      <div class="content main">
+          <h1>Automaton Planet</h1>
+          <p>[ description of the app + ecosystem here ]</p>
+          <Login v-if="showLogin"></Login>
+      </div>
   </div>
 </template>
 
 <script>
 // @ is an alias to /src
-import HelloWorld from '@/components/HelloWorld.vue';
+import {mapGetters} from 'vuex';
+import Login from '@/components/shared/Login.vue';
 
 export default {
   name: 'home',
   components: {
-    HelloWorld,
+    Login
   },
+  computed: {
+    ...mapGetters('authentication', ['isLoggedIn']),
+    showLogin: function () {
+      return !this.isLoggedIn;
+    },
+  }
 };
 </script>
