@@ -36,7 +36,7 @@ const customizedTimeStamp = format((info, opts) => {
 });
 
 const combinedFormat = combine(
-    label({label: process.env.SERVICE_ID || 'socket-spike-server'}),
+    label({label: process.env.SERVICE_ID || 'automaton-world-server'}),
     customizedTimeStamp({localTime: true}),
     myFormat
 );
@@ -83,7 +83,7 @@ module.exports.stream = {
         if(process.env.NODE_ENV === 'production') {
             logger.info(message.replace(/\s*\n+\s*/, ' '));
         } else {
-            logger.verbose(message.replace(/\s*\n+\s*/, ' '));
+            logger.info(message.replace(/\s*\n+\s*/, ' '));
         }
     }
 };

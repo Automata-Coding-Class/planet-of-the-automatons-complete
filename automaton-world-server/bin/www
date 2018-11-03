@@ -8,6 +8,10 @@ var app = require('../app');
 const GameEngine = require('../src/game/game-engine');
 var debug = require('debug')('automaton-world:server');
 var http = require('http');
+const fs = require('fs');
+const path = require('path');
+const cookieParser = require('cookie-parser');
+const https = require('https');
 const logger = require('../src/logger');
 
 /**
@@ -22,7 +26,16 @@ app.set('port', port);
  * Create HTTP server.
  */
 
-var server = http.createServer(app);
+const certOptions = process.env.USE_SECURE_CONNECTION !== 'yes' ?
+  {
+    key: fs.readFileSync(path.resolve('../certification/server.key')),
+    cert: fs.readFileSync(path.resolve('../certification/server.crt'))
+  } :
+  {};
+
+var server = process.env.USE_SECURE_CONNECTION === 'yes' ?
+  https.createServer(certOptions, app) :
+  http.createServer(app);
 GameEngine.connect(server);
 
 /**

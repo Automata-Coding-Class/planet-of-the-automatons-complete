@@ -26,7 +26,6 @@
             <b-button type="submit" variant="primary">Log In</b-button>
         </b-form>
         <p class="error" v-if="errorMessage">Login failed: {{errorMessage}}</p>
-        <button @click="testAuthToken()">test</button>
     </div>
 </template>
 

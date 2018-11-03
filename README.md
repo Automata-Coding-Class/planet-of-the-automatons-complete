@@ -1,6 +1,7 @@
 # automaton-world-complete
 all components of the Automaton World classroom app in one repo
 
+passphrase for the rootCA.key is '2cup3tsp'
 
 
 
@@ -8,9 +9,10 @@ all components of the Automaton World classroom app in one repo
 
 - [coding-class-socket-spike-001 repo](https://github.com/jpgringo/coding-class-socket-spike-001/projects/1)
 
-### Authentication
+### Authentication & Security
 - [Authenticating socket io connections](https://stackoverflow.com/questions/36788831/authenticating-socket-io-connections)
 - [Vue Authentication And Route Handling Using Vue-router](https://scotch.io/tutorials/vue-authentication-and-route-handling-using-vue-router)
+- [How to get HTTPS working on your local development environment in 5 minutes](https://medium.freecodecamp.org/how-to-get-https-working-on-your-local-development-environment-in-5-minutes-7af615770eec)
 
 ### Coding Style
 - [Javascript without the this: Using closures in a different way](http://radar.oreilly.com/2014/03/javascript-without-the-this.html)

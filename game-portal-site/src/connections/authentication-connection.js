@@ -1,8 +1,9 @@
 import axios from 'axios';
+import router from '../router';
 
 export function authenticateUser(loginType, username, password) {
   console.log(`authenticate: loginType='${loginType}'; username='${username}'; password='${password}'`);
-  return axios.post('http://localhost:3000/api/authenticate', {
+  return axios.post(`${process.env.VUE_APP_API_URL}/authenticate`, {
     loginType: loginType,
     username: username,
     password: password
