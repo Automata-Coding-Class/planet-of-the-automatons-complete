@@ -26,14 +26,13 @@ app.set('port', port);
  * Create HTTP server.
  */
 
-const certOptions = process.env.USE_SECURE_CONNECTION !== 'yes' ?
-  {
-    key: fs.readFileSync(path.resolve('../certification/server.key')),
-    cert: fs.readFileSync(path.resolve('../certification/server.crt'))
-  } :
-  {};
+const certOptions = {};
+if (process.env.USE_SECURE_CONNECTION === 'true') {
+  certOptions.key = fs.readFileSync(path.resolve('./cert/server.key')),
+    certOptions.cert = fs.readFileSync(path.resolve('./cert/server.crt'))
+}
 
-var server = process.env.USE_SECURE_CONNECTION === 'yes' ?
+const server = process.env.USE_SECURE_CONNECTION === 'yes' ?
   https.createServer(certOptions, app) :
   http.createServer(app);
 GameEngine.connect(server);

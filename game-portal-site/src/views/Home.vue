@@ -35,7 +35,7 @@ export default {
         requestOptions.headers = {Authorization: `Bearer ${token}`};
       }
       console.log(`requestOptions`, requestOptions);
-      axios.get(`${VUE_APP_API_URL}/secure/test`, requestOptions)
+      axios.get(`${process.env.VUE_APP_API_URL}/secure/test`, requestOptions)
         .then(response => {
           console.log(`response`, response);
         }, err => {
