@@ -44,20 +44,6 @@ const newGame = function(rows = 12, columns = 12) {
 function connect(httpServer) {
   gameServer = require('socket.io')(httpServer);
   newGame();
-  // gameServer.use(function (socket, next) {
-  //   if (socket.handshake.query && socket.handshake.query.token) {
-  //     try {
-  //       socket.decodedToken = verifyToken(socket.handshake.query.token)
-  //       logger.info(`In the hand-rolled socket middleware %O`, socket.decodedToken);
-  //       next();
-  //     } catch(e) {
-  //       next(e);
-  //     }
-  //   } else {
-  //     next(new Error('no credentials provided'));
-  //   }
-  //   newGame();
-  // });
 //
 //   const chatServer = new ChatServer();
 //   chatServer.connect(gameServer);
