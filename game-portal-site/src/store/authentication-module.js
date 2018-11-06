@@ -4,48 +4,59 @@ export default {
   namespaced: true,
   state: {
     authToken: undefined,
-    loginType: undefined,
-    username: undefined,
+    authenticatedUser: {
+      loginType: undefined,
+      username: undefined,
+      userRoles: []
+    },
     loginError: undefined,
-    userRoles: []
   },
   getters: {
     isLoggedIn: state => {
       return state.authToken !== undefined;
+    },
+    userIsAdmin: state => {
+      return state.authenticatedUser !== undefined
+      && state.authenticatedUser.userRoles !== undefined
+      && state.authenticatedUser.userRoles.includes('admin');
     }
   },
   mutations: {
     receiveLoginData(state, loginData) {
       console.log('receiveLoginData', loginData);
-      state.loginType = loginData.loginType;
-      state.username = loginData.username;
       state.authToken = loginData.token;
-      state.userRoles = loginData.roles;
+      state.authenticatedUser = {};
+      state.authenticatedUser.loginType = loginData.loginType;
+      state.authenticatedUser.username = loginData.username;
+      state.authenticatedUser.userRoles = loginData.roles;
     },
     handleLoginError(state, error) {
       state.loginError = error;
     },
     signOut(state) {
-      state.loginType = undefined;
-      state.username = undefined;
       state.authToken = undefined;
-      state.userRoles = [];
+      state.authenticatedUser = undefined;
+      // state.authenticatedUser.loginType = undefined;
+      // state.authenticatedUser.username = undefined;
+      // state.authenticatedUser.userRoles = [];
     }
   },
   actions: {
-    authenticate({commit}, data) {
+    authenticate({commit, dispatch, state}, data) {
       console.log(`authentication-module.authenticate called`, data);
       return authenticateUser(data.loginType, data.username, data.password)
         .then(loginData => {
             commit('receiveLoginData', loginData);
+            dispatch('stateMachine/connect',loginData.token, {root: true});
           },
           err => {
             console.log(`err:`, err);
             commit('handleLoginError', err);
           });
     },
-    signOut({commit}) {
+    signOut({commit, dispatch}) {
       commit('signOut');
+      dispatch('stateMachine/disconnect', {}, {root:true});
     }
   }
 }

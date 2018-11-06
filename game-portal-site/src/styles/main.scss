@@ -100,6 +100,19 @@ blockquote {
           }
         }
       }
+      .game-controls {
+        & > .control-group {
+          display: block;
+          .control-group {
+            white-space: nowrap;
+          }
+        }
+        input[type=text] {
+          width: 3em;
+          text-align: right;
+          margin:0 0.25em 0 0;
+        }
+      }
     }
     .content.sidebar {
       @include make-col-ready();

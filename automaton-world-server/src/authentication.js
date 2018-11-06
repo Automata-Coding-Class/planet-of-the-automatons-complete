@@ -57,6 +57,14 @@ const authenticateUser = function (loginType, username, password) {
   }
 };
 
+const verifyToken = function(token) {
+  // leave error-handling to the calling blocks (different for REST and sockets)
+   return jwt.verify(token, process.env.AUTHENTICATION_SECRET, {
+      issuer: issuer,
+      jwtid: jwtId
+    });
+}
+
 const authenticateRequest = function (req, res, next) {
   if (req.method === 'OPTIONS' // accept CORS pre-flight requests without verification
     && req.headers['access-control-request-headers'] !== undefined
@@ -69,10 +77,11 @@ const authenticateRequest = function (req, res, next) {
     if (match !== null) {
       const token = match[1];
       try {
-        req.decodedToken = jwt.verify(token, process.env.AUTHENTICATION_SECRET, {
-          issuer: issuer,
-          jwtid: jwtId
-        });
+        req.decodedToken = verifyToken(token);
+        //   jwt.verify(token, process.env.AUTHENTICATION_SECRET, {
+        //   issuer: issuer,
+        //   jwtid: jwtId
+        // });
         logger.info(`decoded token: ${JSON.stringify(req.decodedToken)}`);
         next()
       } catch (e) {
@@ -91,6 +100,7 @@ const authenticateRequest = function (req, res, next) {
   }
 };
 
+module.exports.verifyToken = verifyToken;
 module.exports.authenticateUser = authenticateUser;
 module.exports.authenticateRequest = authenticateRequest;
 

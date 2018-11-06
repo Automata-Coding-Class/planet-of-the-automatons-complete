@@ -15,5 +15,4 @@ export function authenticateUser(loginType, username, password) {
       err => {
         return err.response.data;
       });
-
 }

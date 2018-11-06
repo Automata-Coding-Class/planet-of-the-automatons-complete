@@ -45,3 +45,4 @@ passphrase for the rootCA.key is '2cup3tsp'
 - [beaver-logger](https://github.com/krakenjs/beaver-logger)
 - [Remove console.log() Statements from Production JavaScript Apps](https://blog.benestudio.co/remove-console-log-statements-from-production-javascript-apps-7376adc89c7a)
 - [winston](https://github.com/winstonjs/winston) (ah, winston)
+- [Node.js util.format](https://nodejs.org/dist/latest/docs/api/util.html#util_util_format_format_args)

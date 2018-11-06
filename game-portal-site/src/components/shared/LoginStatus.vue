@@ -26,14 +26,19 @@
     computed: {
       loggedIn: function () {
         return this.$store.state.authentication.authToken !== undefined
-          && this.$store.state.authentication.loginType !== undefined
-          && this.$store.state.authentication.username !== undefined;
+          && this.$store.state.authentication.authenticatedUser.loginType !== undefined
+          && this.$store.state.authentication.authenticatedUser.username !== undefined;
       },
       username: function () {
-        return this.$store.state.authentication.username;
+        return this.$store.state.authentication.authenticatedUser.username;
       },
       showLoginWidget: function () {
         return !this.loggedIn && !this.excludedRoutes.includes(this.$router.history.current.name);
+      },
+      currentUserRoles: function() {
+        return this.$store.state.authentication.authenticatedUser !== undefined ?
+          this.$store.state.authentication.authenticatedUser.userRoles :
+          [];
       }
     },
     methods: {
@@ -45,7 +50,7 @@
           .then(result => {
             const redirectRoute = validateAndRoute(this.$router.history.current,
               this.$store.state.authentication.authToken !== undefined,
-              this.$store.state.authentication.userRoles);
+              this.currentUserRoles);
             console.log(`redirect route = `, redirectRoute);
             if (redirectRoute !== undefined) this.$router.push(redirectRoute);
           });

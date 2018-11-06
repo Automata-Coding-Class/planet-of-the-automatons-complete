@@ -101,7 +101,8 @@ const validateAndRoute = function (checkRoute, tokenExists, userRoles) {
 router.beforeEach((to, from, next) => {
   next(validateAndRoute(to,
     store.state.authentication.authToken !== undefined,
-    store.state.authentication.userRoles));
+    store.state.authentication.authenticatedUser !== undefined ?
+      store.state.authentication.authenticatedUser.userRoles : []));
 });
 
 export default router;

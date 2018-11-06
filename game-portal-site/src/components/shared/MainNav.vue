@@ -28,21 +28,24 @@
     },
     computed: {
       currentUserRoles() {
-        return this.$store.state.authentication.userRoles;
+        return this.$store.state.authentication.authenticatedUser !== undefined ?
+          this.$store.state.authentication.authenticatedUser.userRoles :
+          [];
       }
     },
     methods: {
       setLinkVisibility() {
-        const roles = this.currentUserRoles;
+        const userRoles = this.currentUserRoles;
         this.$children.forEach(child => {
           if((/router-link$/i).test(child.$vnode.tag)) {
             const linkPath = child._props.to;
             if(this.routeMap.has(linkPath)) {
               const metaData = this.routeMap.get(linkPath);
+              console.log(`${linkPath} metaData:`, metaData);
               if(metaData.guest && this.$store.state.authentication.authToken !== undefined) {
                 child.$el.hidden = false;
-              } else if(metaData.requiresAuth && metaData.roles !== undefined && roles !== undefined) {
-                child.$el.hidden = !metaData.roles.some(r => roles.includes(r));
+              } else if (metaData.requiresAuth && metaData.roles !== undefined && userRoles !== undefined) {
+                child.$el.hidden = !metaData.roles.some(r => userRoles.includes(r));
               } else {
                 child.$el.hidden = true;
               }

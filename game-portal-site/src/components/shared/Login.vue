@@ -71,7 +71,7 @@
             }
           },
             (err) => {
-
+              console.err(err);
             });
       },
       testAuthToken() {

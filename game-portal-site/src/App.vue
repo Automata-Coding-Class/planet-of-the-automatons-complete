@@ -13,7 +13,12 @@
   import LoginStatus from './components/shared/LoginStatus';
 
   export default {
-    components: {LoginStatus, MainNav}
+    components: {LoginStatus, MainNav},
+    mounted() {
+      if(this.$store.state.authentication.authToken !== undefined) {
+        this.$store.dispatch('stateMachine/connect', this.$store.state.authentication.authToken);
+      }
+    }
   }
 
 

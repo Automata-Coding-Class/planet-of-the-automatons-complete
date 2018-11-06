@@ -8,6 +8,12 @@ module.exports = function createGameStateMachine(rows, columns) {
   let allowSameStateTransitions = false;
   let currentState = states.stopped;
 
+  function getGameParameters() {
+    return {
+      boardGrid: {rows: rows, columns: columns }
+    }
+  }
+
   function getCurrentState() {
     return currentState.name;
   }
@@ -89,6 +95,7 @@ module.exports = function createGameStateMachine(rows, columns) {
 
   return {
     size: {rows: rows, cols: columns},
+    getGameParameters: getGameParameters,
     getCurrentState: getCurrentState,
     addPlayer: addPlayer,
     getNumberOfPlayers: getNumberOfPlayers,

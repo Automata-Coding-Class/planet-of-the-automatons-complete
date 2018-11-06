@@ -4,7 +4,11 @@
           <h1>Automaton Planet</h1>
           <p>[ description of the app + ecosystem here ]</p>
           <Login v-if="showLogin"></Login>
-          <p><button @click="testAuthToken()">test</button></p>
+          <p>
+              <button @click="testAuthToken()">test auth token</button>
+              <button @click="testStateMachineSocket()">test state machine socket</button>
+          </p>
+          <p>Test response: {{ testResponse }}</p>
       </div>
   </div>
 </template>
@@ -19,6 +23,11 @@ export default {
   name: 'home',
   components: {
     Login
+  },
+  data: function() {
+    return {
+      testResponse: undefined
+    }
   },
   computed: {
     ...mapGetters('authentication', ['isLoggedIn']),
@@ -46,6 +55,10 @@ export default {
           console.error(`error`, err);
         })
 
+    },
+    testStateMachineSocket() {
+      this.$store.dispatch('stateMachine/ping')
+        .then(response => this.testResponse = response)
     }
 
   }

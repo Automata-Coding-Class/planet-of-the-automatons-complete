@@ -35,17 +35,31 @@ const customizedTimeStamp = format((info, opts) => {
     return info;
 });
 
-const combinedFormat = combine(
-    label({label: process.env.SERVICE_ID || 'automaton-world-server'}),
-    customizedTimeStamp({localTime: true}),
-    myFormat
+const forceToSingleLine = format(info => {
+  info.message = info.message.replace(/\s*\n+\s*/g, ' ');
+  return info;
+})
+
+const singleLineFormat = combine(
+  format.splat(),
+  label({label: process.env.SERVICE_ID || 'automaton-world-server'}),
+  customizedTimeStamp({localTime: true}),
+  myFormat,
+  forceToSingleLine()
+);
+
+const prettyPrintedFormat = combine(
+  format.splat(),
+  label({label: process.env.SERVICE_ID || 'automaton-world-server'}),
+  customizedTimeStamp({localTime: true}),
+  myFormat
 );
 
 const fileDateStampPattern = 'YYYY-MM-DD'; // 'YYYY-MM-DDTHH' or 'YYYY-MM-DDTHH:mm' also feasible
 
 const logger = createLogger({
     level: 'info',
-    format: combinedFormat,
+  format: singleLineFormat,
     transports: [
         //
         // - Write to all logs with level `info` and below to `combined.log`
@@ -72,7 +86,7 @@ const logger = createLogger({
 logger.info(`NODE_ENV=${process.env.NODE_ENV}`);
 if (process.env.NODE_ENV !== 'production') {
     logger.add(new transports.Console({
-        format: combinedFormat, // format.simple(),
+      format: singleLineFormat, // format.simple(),
         colorize: true
     }));
 }
