@@ -21,6 +21,8 @@ Date.prototype.toLocalizedISOString = function () {
         ':' + pad(tzo % 60);
 };
 
+const appName = process.env.PROCESS_NAME || require(path.join(path.dirname(require.main.filename), '../package.json')).name || require.main.filename;
+
 const myFormat = printf(info => {
     return `${info.timestamp} [${info.label}] ${process.pid} ${info.level}: ${info.message}`;
 });
@@ -42,7 +44,7 @@ const forceToSingleLine = format(info => {
 
 const singleLineFormat = combine(
   format.splat(),
-  label({label: process.env.SERVICE_ID || 'automaton-world-server'}),
+  label({label: appName}),
   customizedTimeStamp({localTime: true}),
   myFormat,
   forceToSingleLine()
@@ -50,7 +52,7 @@ const singleLineFormat = combine(
 
 const prettyPrintedFormat = combine(
   format.splat(),
-  label({label: process.env.SERVICE_ID || 'automaton-world-server'}),
+  label({label: appName}),
   customizedTimeStamp({localTime: true}),
   myFormat
 );
