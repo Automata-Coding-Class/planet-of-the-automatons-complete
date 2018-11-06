@@ -1,0 +1,25 @@
+{
+  "name": "cli-client",
+  "version": "0.0.0",
+  "description": "A command-line client to test connection to the socket server",
+  "preferGlobal": false,
+  "main": "index.js",
+  "scripts": {
+    "start": "node $NODE_DEBUG_OPTION index.js interactive",
+    "start:list": "node index -l ./data/test.csv",
+    "help": "node index.js --help",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Rick Walters",
+  "license": "ISC",
+  "dependencies": {
+    "commander": "^2.18.0",
+    "csv": "^4.0.0",
+    "fs": "0.0.1-security",
+    "inquirer": "^6.2.0",
+    "path": "^0.12.7",
+    "socket.io-client": "^2.1.1",
+    "winston": "^3.1.0",
+    "winston-daily-rotate-file": "^3.3.3"
+  }
+}
