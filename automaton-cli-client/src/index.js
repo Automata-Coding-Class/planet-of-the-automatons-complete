@@ -1,9 +1,9 @@
 require('dotenv').config();
-const program = require('commander');
-const {prompt} = require('inquirer');
+const { prompt } = require('inquirer');
 const axios = require('axios').create({timeout: 3000});
 const logger = require('./logger.js');
 const authenticate = require('./authentication').authenticate;
+const createSocketManager = require('./socket-connections/socket-manager');
 const bot = require('../bot');
 
 // require(path.join(path.dirname(require.main.filename), '../package.json')).name ||
@@ -11,61 +11,38 @@ process.env.APP_NAME = process.env.PROCESS_NAME/* || require.main.filename*/;
 
 logger.info(`process ${process.pid} launched`);
 
-const rejectionHandler = (e) => {
-  logger.info(`e: %o`,e);
-  // return e;
-};
-
-program
-  .version('0.0.1');
-
-
-program
-  .command('interactive')
-  .alias('in')
-  .description('run the program in normal mode')
-  .action(function () {
-    showStartMenu()
-      .then(() => {
-          return showConnectionMenu();
-        },
-        () => {
-          quit();
-          return Promise.reject('exiting');
-        })
-      .then(connectionAnswers => {
-        logger.info(`answers: %o`, connectionAnswers);
-        return showLoginMenu()
-          .then(loginAnswers => {
-            return Object.assign({}, connectionAnswers, loginAnswers);
-          });
-      })
-      .then(collatedAnswers => {
-        logger.info(`collatedAnswers: %o`, collatedAnswers);
-        return authenticate(collatedAnswers);
-      })
-      .then(data => {
-        logger.info(`login response: %o`, data);
-      }, reason => logger.error(`reason: %s`, reason.message))
-  });
-
-program.parse(process.argv);
-
-function authenticate(options) {
-  const authenticationUrl = `http://${options.serverAddress}:${options.serverPort}/api/authenticate`;
-  logger.info(`authenticationUrl=%s`, authenticationUrl);
-  return axios.post(authenticationUrl, {
-    loginType: 'player',
-    username: options.username
-  })
-    .then(response => {
-        logger.info(`authentication.authenticate response:`, response);
-        return response.data;
+const run = async () => {
+  showStartMenu()
+    .then(() => {
+        return showConnectionMenu();
       },
-      err => {
-      // logger.info(`an error occurred: %O`, err);
-        throw err;
-      });
+      () => {
+        quit();
+        return Promise.reject('exiting');
+      })
+    .then(connectionAnswers => {
+      logger.info(`answers: %o`, connectionAnswers);
+      return showLoginMenu()
+        .then(loginAnswers => {
+          return Object.assign({}, connectionAnswers, loginAnswers);
+        });
+    })
+    .then(collatedAnswers => {
+      logger.info(`collatedAnswers: %o`, collatedAnswers);
+      return authenticate(collatedAnswers)
+        .then(loginResponse => {
+          return Object.assign({}, loginResponse, collatedAnswers);
+        })
+    })
+    .then(data => {
+      logger.info(`login response: %o`, data);
+      const socketManager = createSocketManager(`http://${data.serverAddress}:${data.serverPort}`);
+      return socketManager.openAllConnections(data.token)
+        .then(() => { return socketManager; })
+    })
+    .then(response => {
+      logger.info(`well, there you have it: %o`, response);
+    }, reason => logger.error(`reason: %s`, reason.message))
 }
 
 function showStartMenu() {
@@ -80,7 +57,7 @@ function showStartMenu() {
   };
   return prompt(startMenu)
     .then(answers => {
-      // console.log(JSON.stringify(answers, null, '   '));
+      return 'fucknuts';
       if (answers.start[0].toLowerCase() === 'c') {
         return true;
       } else {
@@ -250,6 +227,9 @@ function createEventConnection(username) {
   return socket;
 }
 
+run();
+
 module.exports = {
-  authenticate: authenticate
+  authenticate: authenticate,
+  showStartMenu: showStartMenu,
 }
