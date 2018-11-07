@@ -21,8 +21,8 @@ Date.prototype.toLocalizedISOString = function () {
     ':' + pad(tzo % 60);
 };
 
-
-const appName = process.env.PROCESS_NAME || require(path.join(path.dirname(require.main.filename), '../package.json')).name || require.main.filename;
+// require(path.join(path.dirname(require.main.filename), '../package.json')).name ||
+const appName = process.env.PROCESS_NAME/* || require.main.filename*/;
 
 const myFormat = printf(info => {
   return `${info.timestamp} [${info.label}] ${process.pid} ${info.level}: ${info.message}`;

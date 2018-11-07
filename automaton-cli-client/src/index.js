@@ -3,7 +3,11 @@ const program = require('commander');
 const {prompt} = require('inquirer');
 const axios = require('axios').create({timeout: 3000});
 const logger = require('./logger.js');
+const authenticate = require('./authentication').authenticate;
 const bot = require('../bot');
+
+// require(path.join(path.dirname(require.main.filename), '../package.json')).name ||
+process.env.APP_NAME = process.env.PROCESS_NAME/* || require.main.filename*/;
 
 logger.info(`process ${process.pid} launched`);
 
@@ -244,4 +248,8 @@ function createEventConnection(username) {
   });
 
   return socket;
+}
+
+module.exports = {
+  authenticate: authenticate
 }

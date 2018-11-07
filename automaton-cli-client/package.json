@@ -6,9 +6,8 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node $NODE_DEBUG_OPTION src/index.js interactive",
-    "start:list": "node index -l ./data/test.csv",
     "help": "node src/index.js --help",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest --watch"
   },
   "author": "Rick Walters",
   "license": "ISC",
@@ -23,5 +22,8 @@
     "socket.io-client": "^2.1.1",
     "winston": "^3.1.0",
     "winston-daily-rotate-file": "^3.3.3"
+  },
+  "devDependencies": {
+    "jest": "^23.6.0"
   }
 }
