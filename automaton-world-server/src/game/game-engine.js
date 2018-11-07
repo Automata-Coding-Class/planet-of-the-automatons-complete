@@ -1,8 +1,7 @@
 const logger = require('../logger');
-const Authentication = require('../authentication');
 const createGameStateMachine = require('./state/game-state-machine');
 const ChatServer = require('./chat-server');
-const EventServer = require('./event-server');
+const EventServer = require('./sockets/event-server');
 const StateServer = require('./sockets/state-server');
 
 const GameEngine = {};
@@ -50,8 +49,8 @@ function connect(httpServer) {
 //   chatServer.on('userJoined', userJoinedHandler);
 //   chatServer.on('userLeft', userLeftHandler);
 //
-//   const eventServer = new EventServer(gameServer);
-//   eventServer.connect();
+  const eventServer = new EventServer(gameServer);
+  eventServer.connect();
 //   eventServer.on('userJoined', userJoinedHandler);
 //   eventServer.on('userLeft', userLeftHandler);
 //
