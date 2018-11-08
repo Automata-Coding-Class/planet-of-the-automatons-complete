@@ -1,6 +1,5 @@
 require('dotenv').config();
 const { prompt } = require('inquirer');
-const axios = require('axios').create({timeout: 3000});
 const logger = require('./logger.js');
 const authenticate = require('./authentication').authenticate;
 const createSocketManager = require('./socket-connections/socket-manager');
@@ -173,61 +172,10 @@ function quit(socket) {
   }, 250);
 }
 
-function createChatConnection(username) {
-  const hostAddress = 'http://localhost:3000/chat';
-  logger.info(`connecting to host '${hostAddress}'...`);
-
-  const socket = require('socket.io-client')(hostAddress);
-
-  socket.on('connect', function () {
-    logger.info(`connected to host '${hostAddress}'`);
-    socket.emit('loginData', {name: username, role: 'player'});
+run()
+  .then(() => {
+    logger.info(`run loop completed`);
   });
-  socket.on('announcement', function (msg) {
-    logger.info(`announcement received: ${msg}`)
-  });
-  socket.on('disconnect', function () {
-    logger.info(`disconnected from host '${hostAddress}'`);
-  });
-
-  return socket;
-}
-
-function createEventConnection(username) {
-  const hostAddress = 'http://localhost:3000/events';
-  logger.info(`connecting to host '${hostAddress}'...`);
-
-  const socket = require('socket.io-client')(hostAddress);
-
-  socket.on('connect', function () {
-    logger.info(`connected to host '${hostAddress}'`);
-    socket.emit('loginData', {name: username, role: 'player'});
-  });
-  socket.on('announcement', function (msg) {
-    console.log('announcement: ', msg);
-    logger.info(`announcement received: ${msg}`)
-  });
-  socket.on('game-event', gameEvent => {
-    switch(gameEvent.eventName) {
-      case 'game-started':
-        socket.emit('game-event', {eventName: 'ready'});
-        break;
-      case 'new-frame':
-        console.log('new-frame received:', gameEvent.data);
-        socket.emit('game-event', {eventName: 'frame-response', data: bot.processFrame(gameEvent.data)});
-        break;
-    }
-  });
-
-  socket.on('greeting', msg => console.log(msg));
-  socket.on('disconnect', function () {
-    logger.info(`disconnected from host '${hostAddress}'`);
-  });
-
-  return socket;
-}
-
-run();
 
 module.exports = {
   authenticate: authenticate,
