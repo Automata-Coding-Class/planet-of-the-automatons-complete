@@ -22,9 +22,9 @@ export default {
   },
   actions: {
     connect({commit, dispatch, state}, authToken) {
-      console.log(`gonna try to connect a user to the state machine:`, authToken);
       stateConnection.createConnection(authToken)
         .then(() => {
+          console.log(`connected to the stateMachine server`);
           return stateConnection.getGameParameters();
         })
         .then(gameParameters => {

@@ -2,37 +2,25 @@ import * as CoreSocketConnection from './core-socket-connection'
 
 
 export function createStateConnection() {
-  const namespace = 'state';
+  const namespaceIdentifier = 'state';
   const coreConnection = CoreSocketConnection.createCoreSocketConnection();
 
   let socket;
 
   const createConnection = async (authToken) => {
     console.log(`authToken:`, authToken);
-    socket = await coreConnection.createConnection(namespace, authToken);
+    socket = await coreConnection.createConnection(namespaceIdentifier, authToken);
+    addSocketEvents(socket);
+    console.log(`socket`, socket);
+  };
+
+  const addSocketEvents = (socket) => {
     socket.on('newGameCreated', gameParameters => {
       console.log(`six:`, gameParameters);
       coreConnection.dispatchEvent('newGameCreated', gameParameters);
     });
+  }
 
-    console.log(`socket`, socket);
-  };
-
-  const disconnect = () => {
-    if(socket && socket.connected) {
-      console.log(`closing socket`);
-      socket.close();
-    }
-    socket = undefined;
-  };
-  const ping = () => {
-    console.log(`pinging the state machine socket...`);
-    return new Promise((resolve) => {
-      socket.emit('penguin', function (response) {
-        resolve(response);
-      });
-    });
-  };
   const getGameParameters = () => {
     return new Promise((resolve) => {
       socket.emit('gameParamsRequest', function (gameParameters) {
@@ -50,8 +38,8 @@ export function createStateConnection() {
   return {
     objectName: 'StateMachineConnection',
     createConnection: createConnection,
-    disconnect: disconnect,
-    ping: ping,
+    disconnect: coreConnection.disconnect,
+    ping: coreConnection.ping,
     getGameParameters: getGameParameters,
     requestNewGame: requestNewGame,
     on: coreConnection.on
