@@ -25,13 +25,18 @@ class SocketServerCore extends EventEmitter {
     this.emit('pingResponse', `${this.constructor.name} responded to local ping`);
   }
 
-  authenticateConnection(socket) {
+  authenticateConnection(socket, next) {
+    logger.info(`authenticating connection...`);
     if (socket.handshake.query && socket.handshake.query.token) {
       try {
-        socket.decodedToken = verifyToken(socket.handshake.query.token)
+        socket.decodedToken = verifyToken(socket.handshake.query.token);
+        if (socket.decodedToken) {
+          next();
+        }
       } catch (e) {
         this.error(`an authentication error occurred %O`, e);
         this.log(`token provided: %O`, socket.handshake.query.token);
+        throw e;
       }
     } else {
       throw new Error('no credentials provided');
@@ -42,15 +47,30 @@ class SocketServerCore extends EventEmitter {
     // override in subclasses
   }
 
+  beforePublish(eventName, ...args) {
+    // override in subclasses
+    return args;
+  }
+
+  publishEvent(eventName, ...args) {
+    if (this.namespace !== undefined) {
+      args = this.beforePublish(eventName, ...args);
+      this.namespace.emit(eventName, ...args);
+    }
+  }
+
   connect() {
     this.log(`connecting...`);
     this.namespace = this.socketServer.of(`/${this.namespaceIdentifier}`);
+    this.namespace.use(this.authenticateConnection)
     this.emit('namespaceCreated', this.namespaceIdentifier);
 
     this.namespace.on('connection', (socket) => {
-      this.authenticateConnection(socket);
       this.log(`a client connected: %O`, socket.decodedToken);
-      this.emit('clientConnected', socket.id);
+      this.publishEvent('clientConnected', {
+        username: socket.decodedToken.username,
+        loginType: socket.decodedToken.loginType
+      });
 
       let user = {
         userId: socket.decodedToken.userId,

@@ -11,6 +11,11 @@ class EventServer extends SocketServerCore {
   addSocketEvents(socket) {
   }
 
+  beforePublish(eventName, ...args) {
+    args.unshift(new Date());
+    return args;
+  }
+
   // add local event handlers here
 }
 
