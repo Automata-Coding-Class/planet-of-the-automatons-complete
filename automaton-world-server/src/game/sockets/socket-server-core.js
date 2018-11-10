@@ -2,6 +2,7 @@ const logger = require('../../logger');
 const EventEmitter = require('events');
 const Authentication = require('../../authentication');
 const verifyToken = Authentication.verifyToken;
+const sanitizeToken = Authentication.sanitizeToken;
 
 class SocketServerCore extends EventEmitter {
   constructor(socketServer) {
@@ -67,20 +68,14 @@ class SocketServerCore extends EventEmitter {
 
     this.namespace.on('connection', (socket) => {
       this.log(`a client connected: %O`, socket.decodedToken);
-      this.publishEvent('clientConnected', {
-        username: socket.decodedToken.username,
-        loginType: socket.decodedToken.loginType
-      });
+      let user = sanitizeToken(socket.decodedToken)
+      this.publishEvent('clientConnected', user);
 
-      let user = {
-        userId: socket.decodedToken.userId,
-        username: socket.decodedToken.username,
-        roles: socket.decodedToken.roles
-      };
 
       socket.on('disconnect', () => {
         this.log(`user disconnected: %O`, user);
-        this.emit('userLeft', {clientId: socket.client.id}, user);
+        this.emit('userLeft', user);
+        this.publishEvent('clientDisconnected', user);
         // this.socketServer.of('events').emit('userStatus', {username: user.name, message: 'left'});
       });
 
@@ -101,6 +96,7 @@ class SocketServerCore extends EventEmitter {
     this.namespace.removeAllListeners();
     delete this.socketServer.nsps[`/${this.namespaceIdentifier}`];
   }
+
 }
 
 module.exports = SocketServerCore;

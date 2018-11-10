@@ -63,7 +63,17 @@ const verifyToken = function(token) {
       issuer: issuer,
       jwtid: jwtId
     });
-}
+};
+
+const sanitizeToken = function(token) {
+  let sanitizedToken = {
+    loginType: token.loginType,
+    userId: token.userId,
+    username: token.username,
+    roles: token.roles
+  };
+  return sanitizedToken;
+};
 
 const authenticateRequest = function (req, res, next) {
   if (req.method === 'OPTIONS' // accept CORS pre-flight requests without verification
@@ -101,6 +111,7 @@ const authenticateRequest = function (req, res, next) {
 };
 
 module.exports.verifyToken = verifyToken;
+module.exports.sanitizeToken = sanitizeToken;
 module.exports.authenticateUser = authenticateUser;
 module.exports.authenticateRequest = authenticateRequest;
 
