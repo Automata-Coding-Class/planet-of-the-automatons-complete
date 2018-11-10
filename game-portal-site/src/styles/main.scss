@@ -113,6 +113,21 @@ blockquote {
           margin:0 0.25em 0 0;
         }
       }
+      .system-status {
+        .player-list {
+          display: inline;
+          list-style-type: none;
+          padding-left:0;
+          .player {
+            display: inline-block;
+            margin-right: 0.25em;
+            &:after {
+              content: ",";
+
+            }
+          }
+        }
+      }
     }
     .content.sidebar {
       @include make-col-ready();

@@ -41,7 +41,6 @@
             const linkPath = child._props.to;
             if(this.routeMap.has(linkPath)) {
               const metaData = this.routeMap.get(linkPath);
-              console.log(`${linkPath} metaData:`, metaData);
               if(metaData.guest && this.$store.state.authentication.authToken !== undefined) {
                 child.$el.hidden = false;
               } else if (metaData.requiresAuth && metaData.roles !== undefined && userRoles !== undefined) {

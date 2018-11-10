@@ -48,6 +48,7 @@ export default {
         .then(loginData => {
             commit('receiveLoginData', loginData);
             dispatch('stateMachine/connect',loginData.token, {root: true});
+            dispatch('gameEvents/connect',loginData.token, {root: true});
           },
           err => {
             console.log(`err:`, err);

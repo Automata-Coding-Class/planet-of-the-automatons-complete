@@ -8,10 +8,8 @@ export function createStateConnection() {
   let socket;
 
   const createConnection = async (authToken) => {
-    console.log(`authToken:`, authToken);
     socket = await coreConnection.createConnection(namespaceIdentifier, authToken);
     addSocketEvents(socket);
-    console.log(`socket`, socket);
   };
 
   const addSocketEvents = (socket) => {

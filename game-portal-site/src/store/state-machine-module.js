@@ -2,8 +2,6 @@ import * as StateConnection from '../connections/state-connection';
 
 const stateConnection = StateConnection.createStateConnection();
 
-console.log(`stateConnection:`, stateConnection);
-
 export default {
   namespaced: true,
   state: {
