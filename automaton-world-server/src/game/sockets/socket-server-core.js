@@ -35,12 +35,10 @@ class SocketServerCore extends EventEmitter {
           next();
         }
       } catch (e) {
-        this.error(`an authentication error occurred %O`, e);
-        this.log(`token provided: %O`, socket.handshake.query.token);
-        throw e;
+        next(new Error(`authentication failed for token '${socket.handshake.query.token}': %o`, e));
       }
     } else {
-      throw new Error('no credentials provided');
+      next(new Error('no credentials provided'));
     }
   }
 

@@ -32,6 +32,9 @@ passphrase for the rootCA.key is '2cup3tsp'
 - [Socket.io 'emit' cheatsheet](https://socket.io/docs/emit-cheatsheet/)
 - [Socket.io client-api docs](https://socket.io/docs/client-api)
 
+### Command Line Interface
+- [Build a JavaScript Command Line Interface (CLI) with Node.js](https://www.sitepoint.com/javascript-command-line-interface-cli-node-js/)
+
 ### Electron
 - [Electronjs.org](https://electronjs.org/)
 - [Electron: The Bad Parts – Hacker Noon](https://hackernoon.com/electron-the-bad-parts-2b710c491547)

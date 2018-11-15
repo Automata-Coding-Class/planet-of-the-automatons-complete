@@ -21,7 +21,8 @@ Date.prototype.toLocalizedISOString = function () {
         ':' + pad(tzo % 60);
 };
 
-const appName = process.env.PROCESS_NAME || require(path.join(path.dirname(require.main.filename), '../package.json')).name || require.main.filename;
+console.log(`process.env.NODE_ENV`, process.env.NODE_ENV);
+const appName = process.env.NODE_ENV === 'test' ? 'automaton server' : process.env.PROCESS_NAME || require(path.join(path.dirname(require.main.filename), '../package.json')).name || require.main.filename;
 
 const myFormat = printf(info => {
     return `${info.timestamp} [${info.label}] ${process.pid} ${info.level}: ${info.message}`;

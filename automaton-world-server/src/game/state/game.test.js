@@ -1,4 +1,5 @@
-const createGameBoard = require('./game-board');
+const {createNewGame, positionDataFilters} = require('./game');
+const createGameOptions = require('./game-options');
 
 const rows = 4, columns = 5;
 
@@ -51,22 +52,39 @@ describe('GameBoard', () => {
 
   describe('initialization', () => {
     test('created board has correct number of cells', () => {
-      const gameBoard = createGameBoard(rows, columns);
+      const gameBoard = createNewGame(rows, columns);
       expect(gameBoard.getNumberOfCells()).toBe(20);
     })
   });
 
+  describe('initialize with options', () => {
+    test('new board with options has correct number of obstacles', () => {
+      const options = createGameOptions()
+        .addPercentObstacles(0.2)
+        .addPercentAssets(0.1);
+      const game = createNewGame(rows, columns, options);
+      expect(game.getBoardPositions(positionDataFilters.obstaclesOnly).length).toBe(4);
+    })
+    test('new board with options has correct number of assets', () => {
+      const options = createGameOptions()
+        .addPercentObstacles(0.2)
+        .addPercentAssets(0.1);
+      const game = createNewGame(rows, columns, options);
+      expect(game.getBoardPositions(positionDataFilters.assetsOnly).length).toBe(2);
+    })
+  });
+
   describe('add players', () => {
-    const gameBoard = createGameBoard(rows, columns);
+    const gameBoard = createNewGame(rows, columns);
     const playerIds = players.map(player => player.id);
-    const numberOfObstacles = 6, numberOfTokens = playerIds.length * 2;
-    test('board has correct number of obstacles and tokens', () => {
-      gameBoard.setUpBoard(numberOfObstacles, numberOfObstacles);
+    const numberOfObstacles = 6, numberOfAssets = playerIds.length * 2;
+    test('board has correct number of obstacles and assets', () => {
+      gameBoard.setUp(numberOfObstacles, numberOfAssets);
       const currentState = gameBoard.getCurrentState();
       expect(currentState.filter(elem => elem !== undefined && elem.type === 'obstacle').length)
         .toBe(numberOfObstacles);
       expect(currentState.filter(elem => elem !== undefined && elem.type === 'asset').length)
-        .toBe(numberOfTokens);
+        .toBe(numberOfAssets);
     });
     test('board has correct number of players', () => {
       gameBoard.distributePlayers(playerIds);
@@ -96,7 +114,7 @@ describe('GameBoard', () => {
       undefined,
       undefined,
       {type: 'obstacle', id: 'obstacle_4'}];
-    const gameBoard = createGameBoard(rows, columns);
+    const gameBoard = createNewGame(rows, columns);
     test('saved state loads correctly', () => {
       gameBoard.loadState(savedState);
       const currentState = gameBoard.getCurrentState();
@@ -120,7 +138,7 @@ describe('GameBoard', () => {
 
     test('frameResponse with successful moves to empty cells', () => {
       expect.assertions(5);
-      const gameBoard = createGameBoard(4, 4);
+      const gameBoard = createNewGame(4, 4);
       gameBoard.loadState(savedState);
       const expectedState = generateState('eoee_peeo_oaep_etae');
       const frameResponses = [
@@ -142,7 +160,7 @@ describe('GameBoard', () => {
 
     test('frameResponse with unsuccessful move to blocked cells and edges', () => {
       expect.assertions(2);
-      const gameBoard = createGameBoard(4, 4);
+      const gameBoard = createNewGame(4, 4);
       gameBoard.loadState(savedState);
       const frameResponses = [
         {id: 'player_0', action: {type: 'move', direction: 'up'}},
@@ -163,7 +181,7 @@ describe('GameBoard', () => {
 
     test('frameResponse with move to / collection of asset', () => {
       // expect.assertions(2);
-      const gameBoard = createGameBoard(4, 4);
+      const gameBoard = createNewGame(4, 4);
       gameBoard.loadState(savedState);
       const expectedState = generateState('eoee_eeeo_opee_etpe');
       const frameResponses = [

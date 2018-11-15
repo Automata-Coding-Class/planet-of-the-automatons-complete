@@ -1,6 +1,7 @@
 const logger = require('../../logger');
 const createPendingStateManager = require('./pending-state-manager');
-const createGameBoard = require('./game-board');
+const { createNewGame } = require('./game');
+const createGameOptions = require('./game-options');
 
 module.exports = function createGameStateMachine(rows, columns) {
   const states = require('./game-states')();
@@ -72,10 +73,13 @@ module.exports = function createGameStateMachine(rows, columns) {
 
   let playerAcknowledgementPromiseManager = createPendingStateManager(run, () => setState(states.errorCondition));
 
-  let gameBoard;
+  const gameOptions = createGameOptions()
+    .addPercentObstacles(0.4)
+    .addPercentAssets(0.2);
+  const game = createNewGame(rows, columns, gameOptions);
+  logger.info(`game: %o`, game);
   function start() {
     setState(states.starting);
-    gameBoard = createGameBoard(rows, columns);
     return new Promise(playerAcknowledgementPromiseManager.makePromiseHandler);
   }
 

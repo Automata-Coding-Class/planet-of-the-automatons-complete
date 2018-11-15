@@ -5,12 +5,20 @@ const {
   getRelativeIndex
 } = require('./state-utils');
 
+const createGameObject = require('./game-object');
+
 const positionDataFilters = {
   returnAll: () => true,
-  playersOnly: positionData => positionData.data.type === 'player'
+  playersOnly: positionData => positionData.data.type === 'player',
+  obstaclesOnly: positionData => positionData.data.type === 'obstacle',
+  assetsOnly: positionData => positionData.data.type === 'asset',
 };
 
-module.exports = function createGameBoard(numberOfRows, numberOfColumns) {
+const createNewGame = function createNewGame(numberOfRows, numberOfColumns, options) {
+  // options are:
+  // - percentObstacles: portion of the board to fill with obstacles (0.0 - 1.0)
+  // - percentAssets: portions of the board to fill with assets (0.0 - 1.0)
+  //                                         }
   const cellStates = new Array(numberOfRows * numberOfColumns);
 
   function getNumberOfCells() {
@@ -27,15 +35,14 @@ module.exports = function createGameBoard(numberOfRows, numberOfColumns) {
         throw new Error('board is full!');
       }
     }
-
   }
 
-  function setUpBoard(numberOfObstacles, numberOfTokens) {
+  function setUp(numberOfObstacles, numberOfAssets) {
     placeGameObject('primary_target', 'target');
     for (let i = 0; i < numberOfObstacles; i++) {
       placeGameObject(`obstacle_${i}`, 'obstacle');
     }
-    for (let i = 0; i < numberOfTokens; i++) {
+    for (let i = 0; i < numberOfAssets; i++) {
       placeGameObject(`asset_${i}`, 'asset');
     }
   }
@@ -138,12 +145,28 @@ module.exports = function createGameBoard(numberOfRows, numberOfColumns) {
     });
   }
 
+  function addTargets(numberOfTargets = 1) {
+    for (let i = 0; i < numberOfTargets; i++) {
+      placeGameObject('target', i);
+    }
+  }
+
+  if(options !== undefined && Object.keys(options).length > 0) {
+    setUp(Math.round(getNumberOfCells() * options.percentObstacles), Math.round(getNumberOfCells() * options.percentAssets));
+  }
+
   return {
     getNumberOfCells: getNumberOfCells,
     getCurrentState: getCurrentState,
-    setUpBoard: setUpBoard,
+    setUp: setUp,
+    getBoardPositions: getBoardPositions,
     distributePlayers: distributePlayers,
     loadState: loadState,
     processFrameResponses: processFrameResponses
   }
 };
+
+module.exports = {
+  positionDataFilters: positionDataFilters,
+  createNewGame: createNewGame
+}
