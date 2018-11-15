@@ -31,8 +31,8 @@ class StateServer extends SocketServerCore {
     });
   }
 
-  newGameHandler(gameParameters) {
-    this.namespace.emit('newGameCreated', gameParameters);
+  newGameHandler(gameParameters, gameState) {
+    this.namespace.emit('newGameCreated', { parameters: gameParameters, layout: gameState });
   }
 }
 

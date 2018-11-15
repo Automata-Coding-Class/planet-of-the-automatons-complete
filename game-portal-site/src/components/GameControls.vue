@@ -10,13 +10,32 @@
 </template>
 
 <script>
+    import { mapState } from 'vuex';
+
   export default {
     name: "GameControls",
     data: function() {
       return {
-        newGameRows: 12,
-        newGameColumns: 12
+
       }
+    },
+    computed: {
+      newGameRows: {
+        get: function() {
+          return this.$store.state.stateMachine.newGameRows;
+        },
+        set: function(newValue) {
+          this.$store.commit('stateMachine/newGameRowsChanged', newValue);
+        }
+      },
+      newGameColumns: {
+        get: function() {
+          return this.$store.state.stateMachine.newGameColumns;
+        },
+        set: function(newValue) {
+          this.$store.commit('stateMachine/newGameColumnsChanged', newValue);
+        }
+      },
     },
     methods: {
       newGame() {

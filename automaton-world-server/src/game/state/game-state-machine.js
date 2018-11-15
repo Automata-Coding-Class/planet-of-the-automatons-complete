@@ -3,17 +3,11 @@ const createPendingStateManager = require('./pending-state-manager');
 const { createNewGame } = require('./game');
 const createGameOptions = require('./game-options');
 
-module.exports = function createGameStateMachine(rows, columns) {
+module.exports = function createGameStateMachine() {
   const states = require('./game-states')();
 
   let allowSameStateTransitions = false;
   let currentState = states.stopped;
-
-  function getGameParameters() {
-    return {
-      boardGrid: {rows: rows, columns: columns }
-    }
-  }
 
   function getCurrentState() {
     return currentState.name;
@@ -73,11 +67,6 @@ module.exports = function createGameStateMachine(rows, columns) {
 
   let playerAcknowledgementPromiseManager = createPendingStateManager(run, () => setState(states.errorCondition));
 
-  const gameOptions = createGameOptions()
-    .addPercentObstacles(0.4)
-    .addPercentAssets(0.2);
-  const game = createNewGame(rows, columns, gameOptions);
-  logger.info(`game: %o`, game);
   function start() {
     setState(states.starting);
     return new Promise(playerAcknowledgementPromiseManager.makePromiseHandler);
@@ -98,8 +87,6 @@ module.exports = function createGameStateMachine(rows, columns) {
   }
 
   return {
-    size: {rows: rows, cols: columns},
-    getGameParameters: getGameParameters,
     getCurrentState: getCurrentState,
     addPlayer: addPlayer,
     getNumberOfPlayers: getNumberOfPlayers,

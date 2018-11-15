@@ -13,7 +13,6 @@ describe('GameStateMachine', () => {
     const rows = 9, cols = 14;
     test('creates a new instance with correct initial values', () => {
       const gameStateMachine = createGameStateMachine(rows, cols);
-      expect(gameStateMachine).toMatchObject({size: {rows: rows, cols: cols}});
       expect(gameStateMachine.getCurrentState()).toBe('stopped');
     })
   });

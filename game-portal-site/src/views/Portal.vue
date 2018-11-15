@@ -1,8 +1,7 @@
 <template>
   <div class="portal">
       <div class="content main">
-          <p>board grid: {{ boardGrid }}; userIsAdmin: {{ userIsAdmin }}</p>
-          <GameBoard :rows="boardGrid.rows" :columns="boardGrid.columns"></GameBoard>
+          <GameBoard :rows="boardGrid.rows  " :columns="boardGrid.columns" :layout="layout"></GameBoard>
           <GameControls v-if="userIsAdmin"></GameControls>
           <SystemStatus></SystemStatus>
       </div>
@@ -28,7 +27,7 @@ export default {
     SystemStatus
   },
   computed: {
-    ... mapState('stateMachine', ['boardGrid']),
+    ... mapState('stateMachine', ['boardGrid', 'layout']),
     ... mapGetters('authentication', ['userIsAdmin'])
   }
 };

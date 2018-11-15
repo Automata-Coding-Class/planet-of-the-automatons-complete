@@ -2,11 +2,12 @@ $border-color: gainsboro;
 $body-color: #2c3e50;
 $component-border: solid 1px $border-color;
 $rollover-color: orange;
+$body-bg: white;
 
 @import '~bootstrap/scss/bootstrap.scss';
 
 body {
-  background-color: white;
+  //background-color: white;
 }
 
 blockquote {
@@ -73,6 +74,7 @@ blockquote {
       .game-board {
         svg {
           border: solid 1px gainsboro;
+          background-color: $body-bg;
           margin: 25px;
           path {
             fill: none;

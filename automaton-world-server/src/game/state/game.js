@@ -25,6 +25,12 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
     return cellStates.length;
   }
 
+  function getGameParameters() {
+    return {
+      boardGrid: {rows: numberOfRows, columns: numberOfColumns }
+    }
+  }
+
   function placeGameObject(id, type, row, column) {
     if (row === undefined || column === undefined) {
       const slotIndex = getUnoccupiedSlot(cellStates, numberOfRows, numberOfColumns);
@@ -157,6 +163,7 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
 
   return {
     getNumberOfCells: getNumberOfCells,
+    getGameParameters: getGameParameters,
     getCurrentState: getCurrentState,
     setUp: setUp,
     getBoardPositions: getBoardPositions,

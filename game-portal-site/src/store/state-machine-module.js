@@ -5,18 +5,30 @@ const stateConnection = StateConnection.createStateConnection();
 export default {
   namespaced: true,
   state: {
+    newGameRows: 12,
+    newGameColumns: 12,
     boardGrid: {
       rows: 5,
       columns: 5
-    }
+    },
+    layout: {}
   },
   getters: {},
   mutations: {
+    newGameRowsChanged: function(state, newValue) {
+      state.newGameRows = newValue;
+    },
+    newGameColumnsChanged: function(state, newValue) {
+      state.newGameColumns = newValue;
+    },
     setBoardDimensions: function (state, grid) {
       console.log(`setBoardDimensions:`, grid);
       state.boardGrid.rows = parseInt(grid.rows);
       state.boardGrid.columns = parseInt(grid.columns);
-    }
+    },
+    setLayout: function(state, layout) {
+      state.layout = layout;
+    },
   },
   actions: {
     connect({commit, dispatch, state}, authToken) {
@@ -29,9 +41,10 @@ export default {
           console.log(`StateMachineModule - gameParameters:`, gameParameters);
           commit('setBoardDimensions', gameParameters.boardGrid);
         });
-      stateConnection.on('newGameCreated', function gameParameterHandler(gameParameters) {
-        console.log(`seven`, gameParameters);
-        commit('setBoardDimensions', gameParameters.boardGrid);
+      stateConnection.on('newGameCreated', function newGameHandler(newGameResponse) {
+        console.log(`new game response`, newGameResponse);
+        commit('setBoardDimensions', newGameResponse.parameters.boardGrid);
+        commit('setLayout', newGameResponse.layout);
       });
     },
     disconnect() {

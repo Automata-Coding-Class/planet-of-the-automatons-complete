@@ -1,5 +1,6 @@
 const logger = require('../logger');
-const createGameStateMachine = require('./state/game-state-machine');
+const createNewGame = require('./state/game').createNewGame;
+const createGameOptions = require('./state/game-options');
 const ChatServer = require('./chat-server');
 const EventServer = require('./sockets/event-server');
 const StateServer = require('./sockets/state-server');
@@ -35,8 +36,9 @@ const broadcastUserList = function (server) {
   server.of('state').emit('connection-list', flattenedUserList);
 };
 
-const newGame = function(rows = 12, columns = 12) {
-  currentGame = createGameStateMachine(rows, columns);
+const newGame = function(rows = 12, columns = 12, gameOptions) {
+  // currentGame = createGameStateMachine(rows, columns);
+  currentGame = createNewGame(rows, columns, gameOptions);
   return currentGame;
 }
 
@@ -58,8 +60,12 @@ function connect(httpServer) {
   stateServer.connect();
   stateServer.on('newGameRequested', options => {
     logger.info(`four %O`, options);
-    const game = newGame(options.rows, options.columns);
-    stateServer.newGameHandler(game.getGameParameters());
+    // TODO: replace this with code that's responsive to the request
+    const gameOptions = createGameOptions()
+      .addPercentObstacles(0.2)
+      .addPercentAssets(0.1);
+    const game = newGame(options.rows, options.columns, gameOptions);
+    stateServer.newGameHandler(game.getGameParameters(), game.getCurrentState());
   });
   stateServer.on('gameParamsRequest', request => {
     if(request.callback !== undefined) {
