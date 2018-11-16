@@ -61,26 +61,28 @@ const prettyPrintedFormat = combine(
 const fileDateStampPattern = 'YYYY-MM-DD'; // 'YYYY-MM-DDTHH' or 'YYYY-MM-DDTHH:mm' also feasible
 
 const logger = createLogger({
-    level: 'info',
+  level: 'info',
   format: singleLineFormat,
-    transports: [
-        //
-        // - Write to all logs with level `info` and below to `combined.log`
-        // - Write all logs error (and below) to `error.log`.
-        new transports.DailyRotateFile({
-            name: 'file',
-            datePattern: fileDateStampPattern,
-            filename: path.join(__dirname, '/../logs/', '%DATE%.combined.log'),
-            maxFiles: '7d'
-        }),
-        new transports.DailyRotateFile({
-            name: 'file',
-            datePattern: fileDateStampPattern,
-            filename: path.join(__dirname, '/../logs/', '%DATE%.error.log'),
-            maxFiles: '7d',
-            level: 'error'
-        })
-    ]
+  transports: [
+    //
+    // - Write to all logs with level `info` and below to `combined.log`
+    // - Write all logs error (and below) to `error.log`.
+    new transports.DailyRotateFile({
+      name: 'file',
+      datePattern: fileDateStampPattern,
+      filename: path.join(__dirname, '/../logs/', '%DATE%.combined.log'),
+      maxFiles: '7d',
+      format: singleLineFormat,
+    }),
+    new transports.DailyRotateFile({
+      name: 'file',
+      datePattern: fileDateStampPattern,
+      filename: path.join(__dirname, '/../logs/', '%DATE%.error.log'),
+      maxFiles: '7d',
+      format: singleLineFormat,
+      level: 'error'
+    })
+  ]
 });
 
 // If we're not in production then log to the `console` with the format:

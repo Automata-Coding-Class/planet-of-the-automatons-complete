@@ -10,6 +10,7 @@ class StateServer extends SocketServerCore {
 
   addSocketEvents(socket) {
     socket.on('newGameRequest', (options) => {
+      this.log(`newGameRequest: %o`, options);
       this.emit('newGameRequested', {rows: options.rows, columns: options.columns})
     });
 
@@ -29,10 +30,17 @@ class StateServer extends SocketServerCore {
         this.error(JSON.stringify(e));
       }
     });
+
+    socket.on('gameDataRequest', (fn) => {
+      this.log(`quatro. fn: %o`, fn);
+      this.emit('gameDataRequested', (gameData) => {
+        fn(gameData);
+      });
+    })
   }
 
-  newGameHandler(gameParameters, gameState) {
-    this.namespace.emit('newGameCreated', { parameters: gameParameters, layout: gameState });
+  newGameHandler(gameData) {
+    this.namespace.emit('newGameCreated', gameData);
   }
 }
 

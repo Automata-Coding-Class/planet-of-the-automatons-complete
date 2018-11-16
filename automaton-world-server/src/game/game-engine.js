@@ -59,17 +59,21 @@ function connect(httpServer) {
   const stateServer = new StateServer(gameServer);
   stateServer.connect();
   stateServer.on('newGameRequested', options => {
-    logger.info(`four %O`, options);
     // TODO: replace this with code that's responsive to the request
     const gameOptions = createGameOptions()
       .addPercentObstacles(0.2)
       .addPercentAssets(0.1);
     const game = newGame(options.rows, options.columns, gameOptions);
-    stateServer.newGameHandler(game.getGameParameters(), game.getCurrentState());
+    stateServer.newGameHandler(game.getGameData());
   });
   stateServer.on('gameParamsRequest', request => {
     if(request.callback !== undefined) {
       request.callback(currentGame.getGameParameters());
+    }
+  });
+  stateServer.on('gameDataRequested', callback => {
+    if(callback !== undefined) {
+      callback(currentGame.getGameData());
     }
   });
 //
@@ -93,11 +97,11 @@ function connect(httpServer) {
 //   eventServer.on('playerRespondedToFrame', response => stateServer.onPlayerFrameResponse(response));
 //
   gameServer.on('connection', function (socket) {
-    logger.info('GameServer: client connected');
+    logger.info(`GameServer - client connected: socket.id='%s', namespace='%s'`, socket.id, socket.nsp.name);
     // socket.broadcast.emit('announcement', 'foobar'); // sends to all _other_ sockets (I think)
     // gameServer.emit('announcement', 'a user connected');
     socket.on('disconnect', function () {
-      logger.info('GameServer: client disconnected');
+      logger.info('GameEngine - client disconnected: %o', socket.decodedToken);
     });
   });
 

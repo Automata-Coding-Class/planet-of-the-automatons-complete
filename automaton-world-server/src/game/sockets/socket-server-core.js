@@ -2,6 +2,7 @@ const logger = require('../../logger');
 const EventEmitter = require('events');
 const Authentication = require('../../authentication');
 const verifyToken = Authentication.verifyToken;
+const decodeToken = Authentication.decodeToken;
 const sanitizeToken = Authentication.sanitizeToken;
 
 class SocketServerCore extends EventEmitter {
@@ -27,18 +28,35 @@ class SocketServerCore extends EventEmitter {
   }
 
   authenticateConnection(socket, next) {
-    logger.info(`authenticating connection...`);
     if (socket.handshake.query && socket.handshake.query.token) {
       try {
         socket.decodedToken = verifyToken(socket.handshake.query.token);
+        if(socket.nsp.log && socket.nsp.server) {
+          socket.nsp.log.call(socket.nsp.server, `authentication succeeded: %o`, socket.decodedToken);
+        } else {
+          logger.info(`authentication succeeded: %o`, socket.decodedToken);
+        }
         if (socket.decodedToken) {
           next();
         }
       } catch (e) {
-        next(new Error(`authentication failed for token '${socket.handshake.query.token}': %o`, e));
+        const brokenToken = sanitizeToken(decodeToken(socket.handshake.query.token));
+        const err = new Error(`authentication failed for token '${JSON.stringify(brokenToken)}': ${JSON.stringify(e)}`);
+        if(socket.nsp.log && socket.nsp.server) {
+          socket.nsp.log.call(`Authentication error: %o`, err);
+        } else {
+          logger.info(`Authentication error: %o`, err);
+        }
+        next(err);
       }
     } else {
-      next(new Error('no credentials provided'));
+      const err = new Error('no credentials provided');
+      if(socket.nsp.log && socket.nsp.server) {
+        socket.nsp.log.call(`Authentication error: %o`, err);
+      } else {
+        logger.info(`Authentication error: %o`, err);
+      }
+      next(err);
     }
   }
 
@@ -61,6 +79,10 @@ class SocketServerCore extends EventEmitter {
   connect() {
     this.log(`connecting...`);
     this.namespace = this.socketServer.of(`/${this.namespaceIdentifier}`);
+    // pass the required enriched logging objects to the new namespace, so that they are accessible from the authentication middleware function
+    this.namespace.log = this.log;
+    this.namespace.error = this.error;
+    this.namespace.server = this;
     this.namespace.use(this.authenticateConnection)
     this.emit('namespaceCreated', this.namespaceIdentifier);
 
@@ -81,6 +103,17 @@ class SocketServerCore extends EventEmitter {
         this.log(`received ping: %O`, socket.handshake.query);
         fn({message: 'ping response from StateServer'});
       });
+
+      socket.on('connect_failed', (e) => {
+        logger.info(`connect failed: %o`, e);
+      });
+      socket.on('reconnect_failed', (e) => {
+        logger.info(`reconnect failed: %o`, e);
+      });
+      socket.on('error', (e) => {
+        logger.info(`socket error: %o`, e);
+      });
+
       this.addSocketEvents(socket);
     });
 

@@ -29,17 +29,23 @@ export default {
     setLayout: function(state, layout) {
       state.layout = layout;
     },
+    gameDataUpdated: function(state, gameData) {
+      console.log(`will update the game data state:`, gameData);
+      state.boardGrid.rows = parseInt(gameData.parameters.boardGrid.rows);
+      state.boardGrid.columns = parseInt(gameData.parameters.boardGrid.columns);
+      state.layout = gameData.layout;
+    }
   },
   actions: {
     connect({commit, dispatch, state}, authToken) {
       stateConnection.createConnection(authToken)
         .then(() => {
           console.log(`connected to the stateMachine server`);
-          return stateConnection.getGameParameters();
+          return stateConnection.getGameData();
         })
-        .then(gameParameters => {
-          console.log(`StateMachineModule - gameParameters:`, gameParameters);
-          commit('setBoardDimensions', gameParameters.boardGrid);
+        .then(gameData => {
+          console.log(`StateMachineModule - gameData:`, gameData);
+          commit('gameDataUpdated', gameData);
         });
       stateConnection.on('newGameCreated', function newGameHandler(newGameResponse) {
         console.log(`new game response`, newGameResponse);
@@ -60,8 +66,13 @@ export default {
         })
     },
     requestNewGame({}, options) {
-      console.log(`one`);
       stateConnection.requestNewGame(options);
+    },
+    refreshGameData({commit}) {
+      stateConnection.getGameData()
+        .then((gameData) => {
+          commit('gameDataUpdated', gameData);
+        });
     }
   }
 }

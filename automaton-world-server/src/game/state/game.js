@@ -89,6 +89,10 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
     return [].concat(cellStates);
   }
 
+  function getGameData() {
+    return { parameters: getGameParameters(), layout: getCurrentState() }
+  }
+
   function moveEntry(fromIndex, toIndex) {
     if(toIndex !== fromIndex) {
       cellStates[toIndex] = cellStates[fromIndex];
@@ -165,6 +169,7 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
     getNumberOfCells: getNumberOfCells,
     getGameParameters: getGameParameters,
     getCurrentState: getCurrentState,
+    getGameData: getGameData,
     setUp: setUp,
     getBoardPositions: getBoardPositions,
     distributePlayers: distributePlayers,

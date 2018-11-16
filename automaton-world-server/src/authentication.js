@@ -65,6 +65,14 @@ const verifyToken = function(token) {
     });
 };
 
+const decodeToken = function(token) {
+  // leave error-handling to the calling blocks (different for REST and sockets)
+   return jwt.decode(token, process.env.AUTHENTICATION_SECRET, {
+      issuer: issuer,
+      jwtid: jwtId
+    });
+};
+
 const sanitizeToken = function(token) {
   let sanitizedToken = {
     loginType: token.loginType,
@@ -111,6 +119,7 @@ const authenticateRequest = function (req, res, next) {
 };
 
 module.exports.verifyToken = verifyToken;
+module.exports.decodeToken = decodeToken;
 module.exports.sanitizeToken = sanitizeToken;
 module.exports.authenticateUser = authenticateUser;
 module.exports.authenticateRequest = authenticateRequest;

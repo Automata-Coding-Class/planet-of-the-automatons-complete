@@ -97,6 +97,7 @@ blockquote {
               path.grid-lines {
                 stroke-width: 1px;
                 stroke: $border-color;
+                stroke: none;
               }
             }
           }

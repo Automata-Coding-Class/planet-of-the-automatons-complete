@@ -14,7 +14,6 @@ export function createStateConnection() {
 
   const addSocketEvents = (socket) => {
     socket.on('newGameCreated', gameParameters => {
-      console.log(`six:`, gameParameters);
       coreConnection.dispatchEvent('newGameCreated', gameParameters);
     });
   }
@@ -28,8 +27,17 @@ export function createStateConnection() {
     });
   };
 
+  const getGameData = () => {
+    return new Promise((resolve) => {
+      console.log(`socket:`, socket);
+      return socket.emit('gameDataRequest', function (gameData) {
+        console.log(`gameData response:`, gameData);
+        resolve(gameData);
+      });
+    });
+  };
+
   const requestNewGame = (options) => {
-    console.log(`two`);
     return socket.emit('newGameRequest', options);
   };
 
@@ -40,6 +48,7 @@ export function createStateConnection() {
     ping: coreConnection.ping,
     getGameParameters: getGameParameters,
     requestNewGame: requestNewGame,
+    getGameData: getGameData,
     on: coreConnection.on
   };
 }
