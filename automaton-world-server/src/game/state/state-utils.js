@@ -24,20 +24,29 @@ module.exports.getIndexFromRowAndColumn = function(columns, row, col) {
   return row * columns + col;
 };
 
-module.exports.getRelativeIndex = function(index, rows, columns, direction) {
+module.exports.getRelativeIndex = function(index, rows, columns, direction, wrapAround = false) {
+  // TODO: implement wraparound feature (if necessary)
   let newIndex = -1;
   switch(direction) {
     case 'up':
-      newIndex =  Math.max(index - columns, -1);
+      newIndex = Math.max(index - columns, -1);
       break;
     case 'right':
-      newIndex =  index + 1 < rows * columns ? index + 1 : -1;
+      if(index + 1 < rows * columns) {
+        if((index + 1) % columns !== 0 || wrapAround) {
+          newIndex = index + 1;
+        }
+      }
       break;
     case 'down':
-      newIndex =  index + columns < rows * columns ? index + columns : -1;
+      newIndex = index + columns < rows * columns ? index + columns : -1;
       break;
     case 'left':
-      newIndex =  Math.max(index - 1, -1);
+      if(index - 1 >= 0) {
+        if((index) % columns !== 0 || wrapAround) {
+          newIndex = index - 1;
+        }
+      }
       break;
     default:
       newIndex = index;

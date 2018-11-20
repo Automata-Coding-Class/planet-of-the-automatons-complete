@@ -43,11 +43,11 @@ describe('generateState helper', () => {
   })
 });
 
-describe('GameBoard', () => {
+describe('Game Object', () => {
   const players = [
-    {id: 'ABC', name: 'boris'},
-    {id: 'DEF', name: 'fnord'},
-    {id: 'GHI', name: 'quux'}
+    {loginType: 'player', userId: 'ABC', username: 'boris'},
+    {loginType: 'player', userId: 'DEF', username: 'fnord'},
+    {loginType: 'player', userId: 'GHI', username: 'quux'}
   ];
 
   describe('initialization', () => {
@@ -87,7 +87,7 @@ describe('GameBoard', () => {
         .toBe(numberOfAssets);
     });
     test('board has correct number of players', () => {
-      gameBoard.distributePlayers(playerIds);
+      gameBoard.distributePlayers(players);
       expect(gameBoard.getCurrentState()
         .filter(elem => elem !== undefined && elem.type === 'player').length).toBe(3);
     });

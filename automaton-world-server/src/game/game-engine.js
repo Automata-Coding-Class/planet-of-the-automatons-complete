@@ -6,6 +6,7 @@ const EventServer = require('./sockets/event-server');
 const StateServer = require('./sockets/state-server');
 
 const GameEngine = {};
+const frameDelay = 125;
 
 let gameServer = null;
 const connectedUsers = new Map();
@@ -36,7 +37,7 @@ const broadcastUserList = function (server) {
   server.of('state').emit('connection-list', flattenedUserList);
 };
 
-const newGame = function(rows = 12, columns = 12, gameOptions) {
+const newGame = function (rows = 12, columns = 12, gameOptions) {
   // currentGame = createGameStateMachine(rows, columns);
   currentGame = createNewGame(rows, columns, gameOptions);
   return currentGame;
@@ -44,6 +45,10 @@ const newGame = function(rows = 12, columns = 12, gameOptions) {
 
 function connect(httpServer) {
   gameServer = require('socket.io')(httpServer);
+  gameServer.origins((origin, callback) => {
+    callback(null, true);
+  });
+  ;
   newGame();
 //
 //   const chatServer = new ChatServer();
@@ -67,15 +72,51 @@ function connect(httpServer) {
     stateServer.newGameHandler(game.getGameData());
   });
   stateServer.on('gameParamsRequest', request => {
-    if(request.callback !== undefined) {
+    if (request.callback !== undefined) {
       request.callback(currentGame.getGameParameters());
     }
   });
   stateServer.on('gameDataRequested', callback => {
-    if(callback !== undefined) {
+    if (callback !== undefined) {
       callback(currentGame.getGameData());
     }
   });
+  stateServer.on('startGame', () => {
+    stateServer.broadcastGameState(currentGame.start(eventServer.getActivePlayerList()));
+    eventServer.broadcastGameStart();
+  });
+
+  function advanceFrame(frameResponseData) {
+    currentGame.nextFrame(frameResponseData)
+      .then(gameData => {
+        logger.info(`preparing to send updated game data: %o`, gameData);
+        if (gameData !== undefined) {
+          setTimeout(() => {
+            eventServer.distributeGameState(gameData.framePackets);
+          }, frameDelay);
+        }
+        stateServer.broadcastGameState(gameData);
+      });
+  }
+
+  eventServer.on('playersReady', () => {
+    logger.info(`GameEngine - playersReady`);
+    advanceFrame();
+  });
+  eventServer.on('frameResponsesReceived', (frameResponseData) => {
+      logger.info(`GameEngine - frameResponseReceived: %o`, frameResponseData);
+      advanceFrame(frameResponseData);
+    // currentGame.nextFrame(frameResponseData)
+    //   .then(updatedData => {
+    //     logger.info(`GameEngine - updatedData: %o`, updatedData);
+    //   })
+  });
+  // stateServer.on('startGame', () => {
+  // const activePlayerList = eventServer.getActivePlayerList();
+  //   const initialGameState = currentGame.start(activePlayerList);
+  //   stateServer.broadcastGameState(initialGameState);
+  //   // eventServer.startGameLoop(activePlayerList);
+  // });
 //
 //   stateServer.on('userJoined', userJoinedHandler);
 //   stateServer.on('userLeft', userLeftHandler);

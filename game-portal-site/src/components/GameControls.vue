@@ -5,7 +5,8 @@
                 <label for="newGameRowsInput">rows</label></span>
         and <span class="control-group"><input type="text" id="newGameColumnsInput" v-model="newGameColumns">
                 <label for="newGameColumnsInput">columns</label></span></span>
-        <span><button>Start Game</button></span>
+        <span><button @click="startGame" :disabled="playButtonDisabled">{{ playButtonText }}</button></span>
+        <span>status = {{ gameStatus }}</span>
     </div>
 </template>
 
@@ -36,10 +37,28 @@
           this.$store.commit('stateMachine/newGameColumnsChanged', newValue);
         }
       },
+      playButtonText: function() {
+        return 'Start Game';
+      },
+      playButtonDisabled: function() {
+        switch(this.$store.state.stateMachine.gameStatus) {
+          case 'unknown':
+          case 'starting':
+            return true;
+            break;
+          default:
+            return false;
+            break;
+        }
+      },
+      ... mapState('stateMachine', ['gameStatus'])
     },
     methods: {
       newGame() {
         this.$store.dispatch('stateMachine/requestNewGame', {rows: this.newGameRows, columns: this.newGameColumns})
+      },
+      startGame() {
+        this.$store.dispatch('stateMachine/startGame');
       }
     }
   }

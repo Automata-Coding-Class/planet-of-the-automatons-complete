@@ -1,3 +1,7 @@
+const logger = require('../../logger');
+const createGameStateMachine = require('./game-state-machine');
+const { getNeighbourCellValues } = require('./state-utils');
+
 const {
   getRowAndColumnFromIndex,
   getUnoccupiedSlot,
@@ -15,11 +19,14 @@ const positionDataFilters = {
 };
 
 const createNewGame = function createNewGame(numberOfRows, numberOfColumns, options) {
+  numberOfRows = parseInt(numberOfRows);
+  numberOfColumns = parseInt(numberOfColumns);
   // options are:
   // - percentObstacles: portion of the board to fill with obstacles (0.0 - 1.0)
   // - percentAssets: portions of the board to fill with assets (0.0 - 1.0)
   //                                         }
   const cellStates = new Array(numberOfRows * numberOfColumns);
+  const statusManager = createGameStateMachine();
 
   function getNumberOfCells() {
     return cellStates.length;
@@ -31,11 +38,11 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
     }
   }
 
-  function placeGameObject(id, type, row, column) {
+  function placeGameObject(gameObject, row, column) {
     if (row === undefined || column === undefined) {
       const slotIndex = getUnoccupiedSlot(cellStates, numberOfRows, numberOfColumns);
-      if(slotIndex !== null) {
-        cellStates[slotIndex] = {type: type, id: id};
+      if (slotIndex !== null) {
+        cellStates[slotIndex] = gameObject;
       } else {
         // TODO: add an execution path for when the board is full
         throw new Error('board is full!');
@@ -44,18 +51,26 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
   }
 
   function setUp(numberOfObstacles, numberOfAssets) {
-    placeGameObject('primary_target', 'target');
+    placeGameObject({ id: 'primary_target', type: 'target'});
     for (let i = 0; i < numberOfObstacles; i++) {
-      placeGameObject(`obstacle_${i}`, 'obstacle');
+      placeGameObject({ id: `obstacle_${i}`, type: 'obstacle'});
     }
     for (let i = 0; i < numberOfAssets; i++) {
-      placeGameObject(`asset_${i}`, 'asset');
+      placeGameObject({id: `asset_${i}`, type: 'asset'});
     }
   }
 
-  function distributePlayers(playerIdList) {
-    playerIdList.forEach(playerId => {
-      placeGameObject(playerId, 'player');
+  function start(players) {
+    logger.info(`Game - start. Players: %o`, players);
+    const stateSnapshot = [].concat(cellStates);
+    distributePlayers(players);
+    statusManager.start();
+    return getGameData();
+  }
+
+  function distributePlayers(players) {
+    players.forEach(player => {
+      placeGameObject({type: player.loginType, id: player.userId, name: player.username });
     });
   }
 
@@ -81,6 +96,26 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
       }, {})
   }
 
+  function makeFramePackets() {
+    const playerPositions = getPlayerPositions();
+    logger.info(`playerPositions: %o`, playerPositions);
+    return Object.keys(playerPositions).reduce((framePacketData, positionKey) => {
+      framePacketData[positionKey] = getNeighbourCellValues(cellStates, numberOfColumns, playerPositions[positionKey].index);
+      return framePacketData;
+    }, {});
+  }
+
+  async function nextFrame(playerResponseData) {
+    logger.info(`Game - will process next frame`);
+    if(statusManager.getCurrentStatus() === statusManager.states.starting) {
+      statusManager.wait();
+      const gameData = await getGameData();
+      return gameData;
+    } else {
+      return await processFrameResponses(playerResponseData);
+    }
+  }
+
   function loadState(savedState) {
     cellStates.splice(0, cellStates.length, ...savedState);
   }
@@ -90,7 +125,9 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
   }
 
   function getGameData() {
-    return { parameters: getGameParameters(), layout: getCurrentState() }
+    const framePacketData = makeFramePackets();
+    logger.info(`framePacketData: %o`, framePacketData);
+    return { status: statusManager.getCurrentStatus().name, parameters: getGameParameters(), layout: getCurrentState(), framePackets: framePacketData }
   }
 
   function moveEntry(fromIndex, toIndex) {
@@ -108,15 +145,19 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
     return entry;
   }
 
-  function processFrameResponses(responseList) {
+  function processFrameResponses(playerResponseData) {
     return new Promise((resolve /*, reject*/ ) => {
+      if(playerResponseData === undefined) {
+        resolve(Object.assign(getGameData(), {changeSummary: undefined}));
+        return;
+      }
       const changeSummary = [];
       const playerPositions = getPlayerPositions();
-      responseList.forEach(response => {
-      //   // TODO: record proposed states first and then do conflict resolution as necessary
-      //   // but for now...
-        const playerId = response.id;
+      Object.keys(playerResponseData).forEach(playerId => {
+      // TODO: record proposed states first and then do conflict resolution as necessary
+      // but for now...
         const playerIndex = playerPositions[playerId].index;
+        const response = playerResponseData[playerId];
         // const neighbourCells = getNeighbourCellValues(cellStates, numberOfColumns, playerIndex);
         switch (response.action.type) {
           case 'move':
@@ -151,7 +192,7 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
             break;
         }
       });
-      resolve({updatedState: getCurrentState(), changeSummary: changeSummary});
+      resolve(Object.assign(getGameData(), {changeSummary: changeSummary}));
     });
   }
 
@@ -171,6 +212,8 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
     getCurrentState: getCurrentState,
     getGameData: getGameData,
     setUp: setUp,
+    start: start,
+    nextFrame: nextFrame,
     getBoardPositions: getBoardPositions,
     distributePlayers: distributePlayers,
     loadState: loadState,

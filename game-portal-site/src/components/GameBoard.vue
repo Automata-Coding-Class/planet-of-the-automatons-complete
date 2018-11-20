@@ -7,6 +7,7 @@
             <g id="layoutObjectsLayer" class="layout-objects">
                 <path class="object" :d="layoutObjects"></path>
             </g>
+            <g id="playerLayer" class="players"></g>
         </svg>
     </div>
 </template>
@@ -73,13 +74,13 @@
           .selectAll('g')
           .remove();
         // add new layout objects
-        const foobar = this.grid
+        const layoutObjects = this.grid
           .select('#layoutObjectsLayer')
           .selectAll('.object')
           .data(this.layout)
           .enter().append('g');
 
-        foobar.filter((d,i) => {
+        layoutObjects.filter((d,i) => {
           if(d) { d.column = i % this.columns; d.row = Math.floor(i / this.columns )}
           return d && d.type === 'obstacle' ? d : null;
         }).append('rect')
@@ -87,14 +88,34 @@
           .attr('y', d => y(d.row))
           .attr("width", d => x(1))
           .attr("height", d => y(1));
-        foobar.filter((d,i) => {
+        layoutObjects.filter((d,i) => {
           if(d) { d.column = i % this.columns; d.row = Math.floor(i / this.columns )}
           return d && d.type === 'asset' ? d : null;
         }).append('circle')
           .attr('cx', d => x(d.column) + x(0.5))
           .attr('cy', d => y(d.row) + y(0.5))
           .attr("r", d => Math.min(x(0.25), y(0.25)))
-          .attr("fill", 'gold')
+          .attr("fill", 'gold');
+
+        this.grid
+          .select('#playerLayer')
+          .selectAll('g')
+          .remove();
+        const playerObjects = this.grid
+          .select('#playerLayer')
+          .selectAll('path')
+          .data(this.layout)
+          .enter().append('g');
+
+        playerObjects.filter((d,i) => {
+          if(d) { d.column = i % this.columns; d.row = Math.floor(i / this.columns )}
+          return d && d.type === 'player' ? d : null;
+        }).append('rect')
+          .attr('x', d => x(d.column))
+          .attr('y', d => y(d.row))
+          .attr("width", d => x(0.8))
+          .attr("height", d => y(0.8))
+          .attr("fill", "red");
       }
     },
     methods: {

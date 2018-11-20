@@ -31,6 +31,8 @@ passphrase for the rootCA.key is '2cup3tsp'
 - [Socket.io server-api docs](https://socket.io/docs/server-api)
 - [Socket.io 'emit' cheatsheet](https://socket.io/docs/emit-cheatsheet/)
 - [Socket.io client-api docs](https://socket.io/docs/client-api)
+- [socketio-wildcard](https://github.com/hden/socketio-wildcard) enables socket.io to listen 
+  for any event in a namespace 
 
 ### Command Line Interface
 - [Build a JavaScript Command Line Interface (CLI) with Node.js](https://www.sitepoint.com/javascript-command-line-interface-cli-node-js/)
@@ -38,6 +40,7 @@ passphrase for the rootCA.key is '2cup3tsp'
 ### Electron
 - [Electronjs.org](https://electronjs.org/)
 - [Electron: The Bad Parts – Hacker Noon](https://hackernoon.com/electron-the-bad-parts-2b710c491547)
+- [CodeMirror](https://www.npmjs.com/package/codemirror) embedded code editor
 - Tutorials
   - [Build an Electron App in Under 60 Minutes](https://www.youtube.com/watch?v=kN1Czs0m1SU)
   - [Learn Electron in Less than 60 Minutes - Free Beginner's Course](https://www.youtube.com/watch?v=2RxHQoiDctI)

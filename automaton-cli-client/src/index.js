@@ -56,7 +56,6 @@ function showStartMenu() {
   };
   return prompt(startMenu)
     .then(answers => {
-      return 'fucknuts';
       if (answers.start[0].toLowerCase() === 'c') {
         return true;
       } else {

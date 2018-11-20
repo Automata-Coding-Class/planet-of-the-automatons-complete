@@ -16,6 +16,9 @@ export function createStateConnection() {
     socket.on('newGameCreated', gameParameters => {
       coreConnection.dispatchEvent('newGameCreated', gameParameters);
     });
+    socket.on('gameStateUpdated', updatedGameState => {
+      coreConnection.dispatchEvent('gameStateUpdated', updatedGameState);
+    });
   }
 
   const getGameParameters = () => {
@@ -41,6 +44,10 @@ export function createStateConnection() {
     return socket.emit('newGameRequest', options);
   };
 
+  const startGame = () => {
+    return socket.emit('startGame');
+  }
+
   return {
     objectName: 'StateMachineConnection',
     createConnection: createConnection,
@@ -48,6 +55,7 @@ export function createStateConnection() {
     ping: coreConnection.ping,
     getGameParameters: getGameParameters,
     requestNewGame: requestNewGame,
+    startGame: startGame,
     getGameData: getGameData,
     on: coreConnection.on
   };

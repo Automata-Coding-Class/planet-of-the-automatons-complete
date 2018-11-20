@@ -5,6 +5,7 @@ const stateConnection = StateConnection.createStateConnection();
 export default {
   namespaced: true,
   state: {
+    gameStatus: 'unknown',
     newGameRows: 12,
     newGameColumns: 12,
     boardGrid: {
@@ -29,8 +30,12 @@ export default {
     setLayout: function(state, layout) {
       state.layout = layout;
     },
+    setGameStatus: function(state, status) {
+      state.gameStatus = status;
+    },
     gameDataUpdated: function(state, gameData) {
       console.log(`will update the game data state:`, gameData);
+      state.gameStatus = gameData.status;
       state.boardGrid.rows = parseInt(gameData.parameters.boardGrid.rows);
       state.boardGrid.columns = parseInt(gameData.parameters.boardGrid.columns);
       state.layout = gameData.layout;
@@ -49,9 +54,14 @@ export default {
         });
       stateConnection.on('newGameCreated', function newGameHandler(newGameResponse) {
         console.log(`new game response`, newGameResponse);
-        commit('setBoardDimensions', newGameResponse.parameters.boardGrid);
-        commit('setLayout', newGameResponse.layout);
+        commit('gameDataUpdated', newGameResponse);
+        // commit('setBoardDimensions', newGameResponse.parameters.boardGrid);
+        // commit('setLayout', newGameResponse.layout);
       });
+      stateConnection.on('gameStateUpdated', function gameStateUpdateHandler(updatedGameState) {
+        console.log(`updated game state received!`, updatedGameState);
+        commit('gameDataUpdated', updatedGameState);
+      })
     },
     disconnect() {
       stateConnection.disconnect();
@@ -73,6 +83,9 @@ export default {
         .then((gameData) => {
           commit('gameDataUpdated', gameData);
         });
+    },
+    startGame() {
+      stateConnection.startGame();
     }
   }
 }

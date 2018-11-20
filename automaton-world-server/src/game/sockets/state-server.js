@@ -14,6 +14,11 @@ class StateServer extends SocketServerCore {
       this.emit('newGameRequested', {rows: options.rows, columns: options.columns})
     });
 
+    socket.on('startGame', () => {
+      this.log('startGame event received');
+      this.emit('startGame');
+    });
+
     socket.on('gameParamsRequest', (fn) => {
       try {
         this.log(`gameParamsRequest`);
@@ -41,6 +46,10 @@ class StateServer extends SocketServerCore {
 
   newGameHandler(gameData) {
     this.namespace.emit('newGameCreated', gameData);
+  }
+
+  broadcastGameState(gameData) {
+    this.namespace.emit('gameStateUpdated', gameData);
   }
 }
 

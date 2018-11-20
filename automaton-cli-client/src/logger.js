@@ -70,12 +70,14 @@ const logger = createLogger({
     new transports.DailyRotateFile({
       name: 'file',
       datePattern: fileDateStampPattern,
+      format: singleLineFormat,
       filename: path.join(__dirname, '/../logs/', '%DATE%.combined.log'),
       maxFiles: '7d'
     }),
     new transports.DailyRotateFile({
       name: 'file',
       datePattern: fileDateStampPattern,
+      format: singleLineFormat,
       filename: path.join(__dirname, '/../logs/', '%DATE%.error.log'),
       maxFiles: '7d',
       level: 'error'

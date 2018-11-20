@@ -3,6 +3,7 @@ $body-color: #2c3e50;
 $component-border: solid 1px $border-color;
 $rollover-color: orange;
 $body-bg: white;
+$btn-disabled-opacity: 0.4;
 
 @import '~bootstrap/scss/bootstrap.scss';
 
@@ -114,6 +115,11 @@ blockquote {
           width: 3em;
           text-align: right;
           margin:0 0.25em 0 0;
+        }
+        button {
+          &[disabled] {
+            opacity: $btn-disabled-opacity;
+          }
         }
       }
       .system-status {
