@@ -85,18 +85,24 @@ function connect(httpServer) {
     stateServer.broadcastGameState(currentGame.start(eventServer.getActivePlayerList()));
     eventServer.broadcastGameStart();
   });
+  stateServer.on('stopGame', () => {
+    eventServer.stopGame();
+    stateServer.broadcastGameState(currentGame.stop());
+  });
 
   function advanceFrame(frameResponseData) {
-    currentGame.nextFrame(frameResponseData)
-      .then(gameData => {
-        logger.info(`preparing to send updated game data: %o`, gameData);
-        if (gameData !== undefined) {
-          setTimeout(() => {
-            eventServer.distributeGameState(gameData.framePackets);
-          }, frameDelay);
-        }
-        stateServer.broadcastGameState(gameData);
-      });
+    if(currentGame.getCurrentStatus().name !== 'stopped') {
+      currentGame.nextFrame(frameResponseData)
+        .then(gameData => {
+          logger.info(`preparing to send updated game data: %o`, gameData);
+          if (gameData !== undefined) {
+            setTimeout(() => {
+              eventServer.distributeGameState(gameData.framePackets);
+            }, frameDelay);
+          }
+          stateServer.broadcastGameState(gameData);
+        });
+    }
   }
 
   eventServer.on('playersReady', () => {

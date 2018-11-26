@@ -19,6 +19,11 @@ class StateServer extends SocketServerCore {
       this.emit('startGame');
     });
 
+    socket.on('stopGame', () => {
+      this.log('stopGame event received');
+      this.emit('stopGame');
+    });
+
     socket.on('gameParamsRequest', (fn) => {
       try {
         this.log(`gameParamsRequest`);

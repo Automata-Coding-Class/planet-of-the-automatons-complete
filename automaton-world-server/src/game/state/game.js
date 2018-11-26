@@ -116,6 +116,11 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
     }
   }
 
+  function stop() {
+    statusManager.stop();
+    return getGameData();
+  }
+
   function loadState(savedState) {
     cellStates.splice(0, cellStates.length, ...savedState);
   }
@@ -210,9 +215,11 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
     getNumberOfCells: getNumberOfCells,
     getGameParameters: getGameParameters,
     getCurrentState: getCurrentState,
+    getCurrentStatus: statusManager.getCurrentStatus,
     getGameData: getGameData,
     setUp: setUp,
     start: start,
+    stop: stop,
     nextFrame: nextFrame,
     getBoardPositions: getBoardPositions,
     distributePlayers: distributePlayers,

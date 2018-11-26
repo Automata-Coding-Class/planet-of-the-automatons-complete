@@ -57,6 +57,10 @@ module.exports = function createGameStateMachine() {
     setState(states.processingFrame);
   }
 
+  function stop() {
+    setState(states.stopped);
+  }
+
   function reset() {
     // TODO: insert actual game reset code here
     // doesn't go through the normal function because it's a 'hard reset'; assumes the existence of
@@ -71,6 +75,7 @@ module.exports = function createGameStateMachine() {
     states: states,
     getCurrentStatus: getCurrentStatus,
     start: start,
+    stop: stop,
     wait: wait,
     reset: reset,
   };

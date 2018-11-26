@@ -1,11 +1,11 @@
 <template>
     <div class="component game-controls">
-        <span class="control-group"><button @click="newGame">New Game</button> with
+        <span class="control-group"><button @click="newGame" :disabled="newGameButtonDisabled">New Game</button> with
             <span class="control-group"><input type="text" id="newGameRowsInput" v-model="newGameRows"/>
                 <label for="newGameRowsInput">rows</label></span>
         and <span class="control-group"><input type="text" id="newGameColumnsInput" v-model="newGameColumns">
                 <label for="newGameColumnsInput">columns</label></span></span>
-        <span><button @click="startGame" :disabled="playButtonDisabled">{{ playButtonText }}</button></span>
+        <span><button @click="playButtonAction" :disabled="playButtonDisabled">{{ playButtonText }}</button></span>
         <span>status = {{ gameStatus }}</span>
     </div>
 </template>
@@ -37,8 +37,19 @@
           this.$store.commit('stateMachine/newGameColumnsChanged', newValue);
         }
       },
+      newGameButtonDisabled: function() {
+        return this.$store.state.stateMachine.gameStatus !== 'stopped';
+      },
       playButtonText: function() {
-        return 'Start Game';
+        const key = (/^[a-z]+/).exec(this.$store.state.stateMachine.gameStatus)[0];
+        switch(key) {
+          case 'awaiting':
+            return 'Stop Game';
+            break;
+          default:
+            return 'Start Game';
+            break;
+        }
       },
       playButtonDisabled: function() {
         switch(this.$store.state.stateMachine.gameStatus) {
@@ -57,8 +68,13 @@
       newGame() {
         this.$store.dispatch('stateMachine/requestNewGame', {rows: this.newGameRows, columns: this.newGameColumns})
       },
-      startGame() {
-        this.$store.dispatch('stateMachine/startGame');
+      playButtonAction() {
+        const key = (/^[a-z]+/).exec(this.$store.state.stateMachine.gameStatus)[0];
+        if(key === 'stopped') {
+            this.$store.dispatch('stateMachine/startGame', this.$store.state.gameEvents.playerList);
+        }  else {
+          this.$store.dispatch('stateMachine/stopGame');
+        }
       }
     }
   }

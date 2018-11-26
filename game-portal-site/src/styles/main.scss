@@ -1,11 +1,20 @@
 $border-color: gainsboro;
 $body-color: #2c3e50;
 $component-border: solid 1px $border-color;
+$item-border: solid 1px darken($border-color, 20%);
 $rollover-color: orange;
 $body-bg: white;
 $btn-disabled-opacity: 0.4;
+$dimmed-text-color: desaturate(lighten($body-color, 30%), 20%);
+
+$show-sidebar: false;
 
 @import '~bootstrap/scss/bootstrap.scss';
+$fa-font-path: '../../public/fontawesome/webfonts';
+@import './fontawesome/scss/variables';
+@import './fontawesome/scss/mixins';
+@import './fontawesome/scss/core';
+@import './fontawesome/scss/solid';
 
 body {
   //background-color: white;
@@ -22,9 +31,9 @@ blockquote {
 }
 
 #app {
-    font-family: 'Avenir', Helvetica, Arial, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+  font-family: 'Avenir', Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   #banner {
     @include make-row();
     nav {
@@ -63,8 +72,13 @@ blockquote {
     @include make-row();
     padding: 0 30px;
     .content.main {
+      $main-cols: 9;
+      @if $show-sidebar == false {
+        $main-cols: 12;
+      }
+
       @include make-col-ready();
-      @include make-col(9);
+      @include make-col($main-cols);
       & > .component {
         border: $component-border;
       }
@@ -101,6 +115,30 @@ blockquote {
                 stroke: none;
               }
             }
+            #layoutObjectsLayer {
+              .asset {
+                circle {
+                  fill: lightgray;
+                  //stroke-width: 2px;
+                  //stroke: magenta;
+                }
+                .icon {
+                  fill: rebeccapurple;
+                }
+                image {
+                  fill: blue !important;
+                  path {
+                    fill: aqua;
+                    stroke: #990000;
+                  }
+                }
+              }
+            }
+            #playerLayer {
+              .player {
+                color: dodgerblue;
+              }
+            }
           }
         }
       }
@@ -114,7 +152,7 @@ blockquote {
         input[type=text] {
           width: 3em;
           text-align: right;
-          margin:0 0.25em 0 0;
+          margin: 0 0.25em 0 0;
         }
         button {
           &[disabled] {
@@ -126,21 +164,41 @@ blockquote {
         .player-list {
           display: inline;
           list-style-type: none;
-          padding-left:0;
+          padding-left: 0;
           .player {
             display: inline-block;
+            position: relative;
+            padding: 1rem;
+            border: $item-border;
+            box-shadow: $box-shadow-sm;
             margin-right: 0.25em;
-            &:after {
-              content: ",";
-
+            .fa {
+              margin-right: 1rem;
+              font-size: 2em;
+            }
+            .placeholder {
+              color: $dimmed-text-color;
+              $side-padding: 0.15em;
+              padding-left: $side-padding;
+              padding-right: 0;
+            }
+            .name {
+              position: relative;
+              bottom: 0.25em;
+              font-weight: bold;
             }
           }
         }
       }
     }
     .content.sidebar {
-      @include make-col-ready();
-      @include make-col(3);
+      @if $show-sidebar == true {
+        @include make-col-ready();
+        @include make-col(3);
+      }
+      @if $show-sidebar == false {
+        display: none;
+      }
     }
   }
   .demos {
@@ -162,3 +220,4 @@ blockquote {
   }
 
 }
+

@@ -48,6 +48,11 @@ export function createStateConnection() {
     return socket.emit('startGame');
   }
 
+  const stopGame = () => {
+    console.log(`WILL STOP GAME!`);
+    return socket.emit('stopGame');
+  }
+
   return {
     objectName: 'StateMachineConnection',
     createConnection: createConnection,
@@ -56,6 +61,7 @@ export function createStateConnection() {
     getGameParameters: getGameParameters,
     requestNewGame: requestNewGame,
     startGame: startGame,
+    stopGame: stopGame,
     getGameData: getGameData,
     on: coreConnection.on
   };

@@ -2,6 +2,20 @@ import * as StateConnection from '../connections/state-connection';
 
 const stateConnection = StateConnection.createStateConnection();
 
+// this shuffle function is a modified version of a function from:
+// https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
+// but returning a new array instead of modifying the existing one in place
+// the accepted answer on the StackOverflow page also works, but this implementation
+// is more compact
+function shuffleArray(array) {
+  const shuffledArray = [].concat(array);
+  for (let i = shuffledArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffledArray[i], shuffledArray[j]] = [shuffledArray[j], shuffledArray[i]];
+  }
+  return shuffledArray;
+}
+
 export default {
   namespaced: true,
   state: {
@@ -12,7 +26,13 @@ export default {
       rows: 5,
       columns: 5
     },
-    layout: {}
+    stylingOptions: {
+      iconNames: ['cat', 'dog', 'crow', 'fish', 'dove', 'frog',
+        'hippo', 'horse', 'kiwi-bird', 'otter', 'spider'],
+      colors: ['red', 'orange', 'green', 'blue', 'indigo', 'violet', 'rebeccapurple']
+    },
+    layout: {},
+    playerAttributes: {}
   },
   getters: {},
   mutations: {
@@ -39,6 +59,12 @@ export default {
       state.boardGrid.rows = parseInt(gameData.parameters.boardGrid.rows);
       state.boardGrid.columns = parseInt(gameData.parameters.boardGrid.columns);
       state.layout = gameData.layout;
+    },
+    newPlayerAttributesReceived: function(state, playerAttributes) {
+      state.playerAttributes = playerAttributes;
+    },
+    clearGameState: function(state) {
+      state.playerAttributes = {};
     }
   },
   actions: {
@@ -75,7 +101,8 @@ export default {
           console.log(`StateMachineModule - ping response:`, response);
         })
     },
-    requestNewGame({}, options) {
+    requestNewGame({commit}, options) {
+      commit('clearGameState');
       stateConnection.requestNewGame(options);
     },
     refreshGameData({commit}) {
@@ -84,8 +111,24 @@ export default {
           commit('gameDataUpdated', gameData);
         });
     },
-    startGame() {
+    startGame({dispatch}, playerList) {
+      console.log(`StateMachine.startGame - playerList`, playerList);
+      dispatch('setPlayerAttributes', playerList);
       stateConnection.startGame();
+    },
+    setPlayerAttributes({commit, state}, playerList) {
+      console.log(`available icons:`, state.stylingOptions.iconNames);
+      const shuffledIcons = shuffleArray(state.stylingOptions.iconNames);
+      console.log(`shuffledIcons:`, shuffledIcons);
+      const playerAttributes = {};
+      playerList.forEach((p,i) => {
+        playerAttributes[p.userId] = {iconName: shuffledIcons[i], color: state.stylingOptions.colors[i]};
+      })
+      commit('newPlayerAttributesReceived', playerAttributes);
+    },
+    stopGame({commit}, playerList) {
+      stateConnection.stopGame();
+      // commit('newPlayerAttributesReceived', {});
     }
   }
 }

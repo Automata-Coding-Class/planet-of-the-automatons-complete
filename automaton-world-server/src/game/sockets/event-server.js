@@ -61,6 +61,11 @@ class EventServer extends SocketServerCore {
       this.distributeGameState();
   }
 
+  stopGame() {
+    this.publishEvent('gameStopped');
+    this.pendingStates.clear();
+  }
+
   createPendingState(stateId, nextAction, idList, timeoutPeriod) {
     const pendingIds = new Set(idList);
     const collectedResponses = {};
