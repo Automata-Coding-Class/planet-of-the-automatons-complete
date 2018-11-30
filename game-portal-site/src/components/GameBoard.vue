@@ -113,7 +113,7 @@
           return d && d.type === 'obstacle' ? d : null;
         })
           .append('g')
-          .attr('class', 'asset')
+          .attr('class', 'obstacle')
           .attr('transform', d => `translate(${x(d.column)}, ${y(d.row)})`);
         obstacle.append('rect')
           .attr("width", d => x(1))

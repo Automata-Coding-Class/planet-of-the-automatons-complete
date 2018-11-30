@@ -116,6 +116,11 @@ blockquote {
               }
             }
             #layoutObjectsLayer {
+              .obstacle {
+                rect {
+                  fill: black;
+                }
+              }
               .asset {
                 circle {
                   fill: lightgray;
