@@ -57,6 +57,15 @@ describe('Game Object', () => {
     })
   });
 
+  describe('smarter distribution', () => {
+    test('board has correct number of obstacle cells', () => {
+      let rows = 24; let columns = 24;
+      const gameBoard = createNewGame(rows, columns, createGameOptions().addPercentObstacles(.2));
+      // gameBoard.printGameBoardASCII();
+      expect((gameBoard.getBoardPositions(positionDataFilters.obstaclesOnly).length)).toBe(32);
+    })
+  });
+
   describe('initialize with options', () => {
     test('new board with options has correct number of obstacles', () => {
       const options = createGameOptions()

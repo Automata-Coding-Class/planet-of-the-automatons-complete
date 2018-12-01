@@ -1,12 +1,13 @@
 const logger = require('../../logger');
 const createGameStateMachine = require('./game-state-machine');
-const { getNeighbourCellValues } = require('./state-utils');
 
 const {
+  getRandomIntegerInRange,
   getRowAndColumnFromIndex,
   getUnoccupiedSlot,
   getFilledIndices,
-  getRelativeIndex
+  getRelativeIndex,
+  getNeighbourCellValues
 } = require('./state-utils');
 
 const createGameObject = require('./game-object');
@@ -34,7 +35,7 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
 
   function getGameParameters() {
     return {
-      boardGrid: {rows: numberOfRows, columns: numberOfColumns }
+      boardGrid: {rows: numberOfRows, columns: numberOfColumns}
     }
   }
 
@@ -50,11 +51,80 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
     }
   }
 
-  function setUp(numberOfObstacles, numberOfAssets) {
-    placeGameObject({ id: 'primary_target', type: 'target'});
-    for (let i = 0; i < numberOfObstacles; i++) {
-      placeGameObject({ id: `obstacle_${i}`, type: 'obstacle'});
+  function printGameBoardASCII() {
+    let boardString = '';
+    for (let i = 0; i < cellStates.length; i++) {
+      if (i % numberOfColumns === 0) {
+        boardString += '\n'
+      }
+      boardString += `- `;
     }
+    console.log(`\n${boardString}`);
+  }
+
+  function printBlankCellsASCII(blankCellIndices) {
+    let boardString = '';
+    for (let i = 0; i < cellStates.length; i++) {
+      if (i % numberOfColumns === 0) {
+        boardString += '\n'
+      }
+      boardString += blankCellIndices.includes(i) ? `E ` : '· ';
+    }
+    console.log(`\n${boardString}`);
+  }
+
+  function getEmptyNeighbourCellIndex(fromIndex, blankCellIndices) {
+    const neighbourCells = getNeighbourCellValues(cellStates, numberOfColumns, fromIndex);
+    const candidates = [];
+    Object.keys(neighbourCells).forEach(key => {
+      if (neighbourCells[key] === null) {
+        const neighbourIndex = getRelativeIndex(fromIndex, numberOfRows, numberOfColumns, key);
+        if (!blankCellIndices.includes(neighbourIndex)) {
+          candidates.push(neighbourIndex);
+        }
+      }
+    });
+    let emptyCellIndex = undefined;
+    if (candidates.length > 0) {
+      emptyCellIndex = candidates[getRandomIntegerInRange(0, candidates.length)];
+    }
+    return emptyCellIndex;
+  }
+
+  function addEmptyCell(fromIndex, blankCellIndices, maxEmptyCells) {
+    if (blankCellIndices.length === maxEmptyCells) return;
+    const emptyCellIndex = getEmptyNeighbourCellIndex(fromIndex, blankCellIndices);
+    if (emptyCellIndex === undefined) {
+      const currentEntryIndex = blankCellIndices.indexOf(fromIndex);
+      addEmptyCell(blankCellIndices[currentEntryIndex - 1], blankCellIndices, maxEmptyCells);
+    } else {
+      blankCellIndices.push(emptyCellIndex);
+      // printBlankCellsASCII(blankCellIndices);
+      addEmptyCell(emptyCellIndex, blankCellIndices, maxEmptyCells);
+    }
+  }
+
+  function distributeObstacles(numberOfObstacles) {
+    // get initial blank cell, randomly
+    printGameBoardASCII();
+    const startCellIndex = Math.floor(Math.random() * cellStates.length);
+    const blankCellIndices = [];
+    blankCellIndices.push(startCellIndex);
+    addEmptyCell(startCellIndex, blankCellIndices,  cellStates.length - numberOfObstacles);
+    // printBlankCellsASCII(blankCellIndices);
+    blankCellIndices.forEach((cellIndex, entryIndex) => {
+      if(cellStates[cellIndex] === undefined) {
+          placeGameObject({ id: `obstacle_${entryIndex}`, type: 'obstacle'});
+      }
+    })
+  }
+
+  function setUp(numberOfObstacles, numberOfAssets) {
+    // placeGameObject({ id: 'primary_target', type: 'target'});
+    distributeObstacles(numberOfObstacles)
+    // for (let i = 0; i < numberOfObstacles; i++) {
+    //   placeGameObject({ id: `obstacle_${i}`, type: 'obstacle'});
+    // }
     for (let i = 0; i < numberOfAssets; i++) {
       placeGameObject({id: `asset_${i}`, type: 'asset'});
     }
@@ -70,7 +140,7 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
 
   function distributePlayers(players) {
     players.forEach(player => {
-      placeGameObject({type: player.loginType, id: player.userId, name: player.username });
+      placeGameObject({type: player.loginType, id: player.userId, name: player.username});
     });
   }
 
@@ -107,7 +177,7 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
 
   async function nextFrame(playerResponseData) {
     logger.info(`Game - will process next frame`);
-    if(statusManager.getCurrentStatus() === statusManager.states.starting) {
+    if (statusManager.getCurrentStatus() === statusManager.states.starting) {
       statusManager.wait();
       const gameData = await getGameData();
       return gameData;
@@ -132,11 +202,16 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
   function getGameData() {
     const framePacketData = makeFramePackets();
     logger.info(`framePacketData: %o`, framePacketData);
-    return { status: statusManager.getCurrentStatus().name, parameters: getGameParameters(), layout: getCurrentState(), framePackets: framePacketData }
+    return {
+      status: statusManager.getCurrentStatus().name,
+      parameters: getGameParameters(),
+      layout: getCurrentState(),
+      framePackets: framePacketData
+    }
   }
 
   function moveEntry(fromIndex, toIndex) {
-    if(toIndex !== fromIndex) {
+    if (toIndex !== fromIndex) {
       cellStates[toIndex] = cellStates[fromIndex];
       cellStates[fromIndex] = undefined;
       return true;
@@ -151,16 +226,16 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
   }
 
   function processFrameResponses(playerResponseData) {
-    return new Promise((resolve /*, reject*/ ) => {
-      if(playerResponseData === undefined) {
+    return new Promise((resolve /*, reject*/) => {
+      if (playerResponseData === undefined) {
         resolve(Object.assign(getGameData(), {changeSummary: undefined}));
         return;
       }
       const changeSummary = [];
       const playerPositions = getPlayerPositions();
       Object.keys(playerResponseData).forEach(playerId => {
-      // TODO: record proposed states first and then do conflict resolution as necessary
-      // but for now...
+        // TODO: record proposed states first and then do conflict resolution as necessary
+        // but for now...
         const playerIndex = playerPositions[playerId].index;
         const response = playerResponseData[playerId];
         // const neighbourCells = getNeighbourCellValues(cellStates, numberOfColumns, playerIndex);
@@ -207,7 +282,7 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
     }
   }
 
-  if(options !== undefined && Object.keys(options).length > 0) {
+  if (options !== undefined && Object.keys(options).length > 0) {
     setUp(Math.round(getNumberOfCells() * options.percentObstacles), Math.round(getNumberOfCells() * options.percentAssets));
   }
 
@@ -224,11 +299,12 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
     getBoardPositions: getBoardPositions,
     distributePlayers: distributePlayers,
     loadState: loadState,
-    processFrameResponses: processFrameResponses
+    processFrameResponses: processFrameResponses,
+    printGameBoardASCII: printGameBoardASCII
   }
 };
 
 module.exports = {
   positionDataFilters: positionDataFilters,
-  createNewGame: createNewGame
+  createNewGame: createNewGame,
 }
