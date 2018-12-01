@@ -97,39 +97,39 @@ describe('state-utils', () => {
       const cols = 3;
       // first row
       expect(getNeighbourCellValues(sparseArray, cols, 0))
-        .toEqual({top: {type: 'edge'}, right: null, bottom: null, left: {type: 'edge'}});
+        .toEqual({up: {type: 'edge'}, right: null, down: null, left: {type: 'edge'}});
       expect(getNeighbourCellValues(sparseArray, cols, 1))
-        .toEqual({top: {type: 'edge'}, right: null, bottom: null, left: null});
+        .toEqual({up: {type: 'edge'}, right: null, down: null, left: null});
       expect(getNeighbourCellValues(sparseArray, cols, 2))
-        .toEqual({top: {type: 'edge'}, right: {type: 'edge'}, bottom: null, left: null});
+        .toEqual({up: {type: 'edge'}, right: {type: 'edge'}, down: null, left: null});
       // second row
       expect(getNeighbourCellValues(sparseArray, cols, 3))
-        .toEqual({top: null, right: null, bottom: null, left: {type: 'edge'}});
+        .toEqual({up: null, right: null, down: null, left: {type: 'edge'}});
       expect(getNeighbourCellValues(sparseArray, cols, 4))
-        .toEqual({top: null, right: null, bottom: null, left: null});
+        .toEqual({up: null, right: null, down: null, left: null});
       expect(getNeighbourCellValues(sparseArray, cols, 5))
-        .toEqual({top: null, right: {type: 'edge'}, bottom: null, left: null});
+        .toEqual({up: null, right: {type: 'edge'}, down: null, left: null});
       // // third row
       expect(getNeighbourCellValues(sparseArray, cols, 6))
-        .toEqual({top: null, right: null, bottom: {type: 'edge'}, left: {type: 'edge'}});
+        .toEqual({up: null, right: null, down: {type: 'edge'}, left: {type: 'edge'}});
       expect(getNeighbourCellValues(sparseArray, cols, 7))
-        .toEqual({top: null, right: null, bottom: {type: 'edge'}, left: null});
+        .toEqual({up: null, right: null, down: {type: 'edge'}, left: null});
       expect(getNeighbourCellValues(sparseArray, cols, 8))
-        .toEqual({top: null, right: {type: 'edge'}, bottom: {type: 'edge'}, left: null});
+        .toEqual({up: null, right: {type: 'edge'}, down: {type: 'edge'}, left: null});
     });
 
 
     test('check contents of cells at cardinal points', () => {
       const boundaryObject = {type: 'border'};
       expect(getNeighbourCellValues(grid_4x5, grid_4x5_cols, 3, boundaryObject))
-        .toEqual({top: boundaryObject, right: null, bottom: {type: 'object'}, left: null});
+        .toEqual({up: boundaryObject, right: null, down: {type: 'object'}, left: null});
       expect(getNeighbourCellValues(grid_4x5, grid_4x5_cols, 7, boundaryObject))
-        .toEqual({top: null, right: {type: 'object'}, bottom: null, left: {type: 'player'}});
+        .toEqual({up: null, right: {type: 'object'}, down: null, left: {type: 'player'}});
       expect(getNeighbourCellValues(grid_4x5, grid_4x5_cols, 11, boundaryObject))
         .toEqual({
-          top: {type: 'player'},
+          up: {type: 'player'},
           right: null,
-          bottom: {type: 'asset'},
+          down: {type: 'asset'},
           left: {type: 'object'}
         });
     });

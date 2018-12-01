@@ -90,15 +90,15 @@ module.exports.getNeighbourCellValues = function(sparseArray, cols, index, edgeV
   if(edgeValue === undefined) edgeValue = { type: 'edge' };
   const rows = Math.ceil(sparseArray.length / cols);
   // console.log(`rows=${rows}; cols=${cols}; index=${index}`);
-  const top = Math.floor(index/cols) === 0 ? edgeValue :
+  const up = Math.floor(index/cols) === 0 ? edgeValue :
     sparseArray[index-cols] !== undefined ? sparseArray[index-cols] : null;
   const right = index % cols === cols - 1 ? edgeValue :
     sparseArray[index+1] !== undefined ? sparseArray[index+1] : null;
-  const bottom = Math.floor(index / cols) === rows - 1 ? edgeValue:
+  const down = Math.floor(index / cols) === rows - 1 ? edgeValue:
     sparseArray[index+cols] !== undefined ? sparseArray[index+cols] : null;
   const left = index % cols === 0 ? edgeValue :
     sparseArray[index-1] !== undefined ? sparseArray[index-1] : null;
-  return {top: top, right: right, bottom: bottom, left: left};
+  return {up: up, right: right, down: down, left: left};
 };
 
 
