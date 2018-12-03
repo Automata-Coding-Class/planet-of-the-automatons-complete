@@ -59,10 +59,11 @@ describe('Game Object', () => {
 
   describe('smarter distribution', () => {
     test('board has correct number of obstacle cells', () => {
-      let rows = 24; let columns = 24;
-      const gameBoard = createNewGame(rows, columns, createGameOptions().addPercentObstacles(.2));
-      // gameBoard.printGameBoardASCII();
-      expect((gameBoard.getBoardPositions(positionDataFilters.obstaclesOnly).length)).toBe(32);
+      let rows = 6; let columns = 6;
+      const obstaclePercentage = .2;
+      const gameBoard = createNewGame(rows, columns, createGameOptions().addPercentObstacles(obstaclePercentage));
+      gameBoard.printGameBoardASCII();
+      expect((gameBoard.getBoardPositions(positionDataFilters.obstaclesOnly).length)).toBe(Math.floor(rows * columns * obstaclePercentage));
     })
   });
 

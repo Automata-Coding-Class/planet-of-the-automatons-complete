@@ -39,8 +39,8 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
     }
   }
 
-  function placeGameObject(gameObject, row, column) {
-    if (row === undefined || column === undefined) {
+  function placeGameObject(gameObject, atIndex) {
+    if (atIndex === undefined) {
       const slotIndex = getUnoccupiedSlot(cellStates, numberOfRows, numberOfColumns);
       if (slotIndex !== null) {
         cellStates[slotIndex] = gameObject;
@@ -48,6 +48,8 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
         // TODO: add an execution path for when the board is full
         throw new Error('board is full!');
       }
+    } else {
+      cellStates[atIndex] = gameObject;
     }
   }
 
@@ -57,74 +59,126 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
       if (i % numberOfColumns === 0) {
         boardString += '\n'
       }
-      boardString += `- `;
-    }
-    console.log(`\n${boardString}`);
-  }
-
-  function printBlankCellsASCII(blankCellIndices) {
-    let boardString = '';
-    for (let i = 0; i < cellStates.length; i++) {
-      if (i % numberOfColumns === 0) {
-        boardString += '\n'
+      if(cellStates[i] === undefined) {
+        boardString += `- `;
+      } else {
+        boardString += cellStates[i].type.toUpperCase().substr(0, 1) + ' ';
       }
-      boardString += blankCellIndices.includes(i) ? `E ` : '· ';
     }
     console.log(`\n${boardString}`);
   }
 
-  function getEmptyNeighbourCellIndex(fromIndex, blankCellIndices) {
+  // for development use only
+  function printBlankCellsASCII(blankCells, highlightedCells) {
+    const spacerWidth = 2;
+    const spacer = ''.padStart(spacerWidth);
+    const rowStartIndexWidth = 4, rowNumberWidth = 3;
+    const columnWidth = 3;
+    let boardString = '';
+    // print column headers
+    boardString += ''.padStart(spacerWidth + rowStartIndexWidth + spacerWidth);
+    for (let i = 0; i < numberOfColumns; i++) {
+      boardString += i.toString().padEnd(columnWidth, ' ');
+    }
+    boardString += '\n';
+    // print cells
+    const originCharacter = 'O', terminusCharacter = 'X', emptyCellCharacter = 'E',
+      hiliteCharacter = 'H', nullCharacter = '·';
+    for (let i = 0; i < cellStates.length; i++) {
+      // if(i === 0) {
+      //   // boardString += i.toString().padStart(2, ' ') + ' ';
+      // } else
+      if (i % numberOfColumns === 0) {
+        boardString += spacer + i.toString().padStart( rowStartIndexWidth, ' ') + spacer;
+      }
+      let cellString = nullCharacter;
+      if(blankCells.includes(i)) {
+        if(blankCells.indexOf(i) === blankCells.length - 1) {
+          cellString = terminusCharacter
+        } else if(blankCells.indexOf(i) === 0) {
+          cellString = originCharacter;
+        } else if(highlightedCells !== undefined && highlightedCells.includes(i)) {
+          cellString = hiliteCharacter
+        } else {
+          cellString = emptyCellCharacter
+        }
+      }
+      cellString = cellString.padEnd(columnWidth, ' ');
+      if(cellString.includes(originCharacter)) {
+        cellString = '\u001B[32m' + cellString + '\u001B[0m';
+      } else if(cellString.includes(terminusCharacter)) {
+        cellString = '\u001B[31m' + cellString + '\u001B[0m';
+      } else if(cellString.includes(hiliteCharacter)) {
+        cellString = '\u001B[36m' + cellString + '\u001B[0m';
+      }
+      boardString += cellString;
+      // add the row number at the end of each row
+      if( i % numberOfColumns === numberOfColumns - 1) {
+        boardString +=  Math.floor(i / numberOfColumns) + '\n'; // .toString().padStart(rowNumberWidth, ' ') + '\n';
+      }
+    }
+    console.log(`\n${boardString}`);
+  }
+
+  function getRandomNeighbourCellIndex(fromIndex, blankCells, mustBeEmpty = false) {
     const neighbourCells = getNeighbourCellValues(cellStates, numberOfColumns, fromIndex);
     const candidates = [];
     Object.keys(neighbourCells).forEach(key => {
-      if (neighbourCells[key] === null) {
+      if (!mustBeEmpty || neighbourCells[key] === null) {
         const neighbourIndex = getRelativeIndex(fromIndex, numberOfRows, numberOfColumns, key);
-        if (!blankCellIndices.includes(neighbourIndex)) {
+        if (neighbourIndex >= 0 && (!mustBeEmpty || !blankCells.includes(neighbourIndex))) {
           candidates.push(neighbourIndex);
         }
       }
     });
-    let emptyCellIndex = undefined;
+    let neighbourCellIndex = undefined;
     if (candidates.length > 0) {
-      emptyCellIndex = candidates[getRandomIntegerInRange(0, candidates.length)];
+      neighbourCellIndex = candidates[getRandomIntegerInRange(0, candidates.length)];
     }
-    return emptyCellIndex;
+    return neighbourCellIndex;
   }
 
-  function addEmptyCell(fromIndex, blankCellIndices, maxEmptyCells) {
-    if (blankCellIndices.length === maxEmptyCells) return;
-    const emptyCellIndex = getEmptyNeighbourCellIndex(fromIndex, blankCellIndices);
+  function addEmptyCell(fromIndex, blankCells, maxEmptyCells) {
+    printBlankCellsASCII(blankCells, [fromIndex]);
+    if (blankCells.length === maxEmptyCells) return;
+    const emptyCellIndex = getRandomNeighbourCellIndex(fromIndex, blankCells, true);
     if (emptyCellIndex === undefined) {
-      const currentEntryIndex = blankCellIndices.indexOf(fromIndex);
-      addEmptyCell(blankCellIndices[currentEntryIndex - 1], blankCellIndices, maxEmptyCells);
+      const currentEntryIndex = blankCells.indexOf(fromIndex) || undefined;
+      const nextIndex = currentEntryIndex === blankCells.length - 1 ?
+        blankCells[0] :
+        getRandomNeighbourCellIndex(fromIndex, blankCells);
+      addEmptyCell(nextIndex, blankCells, maxEmptyCells);
+      // addEmptyCell(blankCells[currentEntryIndex - 1], blankCells, maxEmptyCells);
     } else {
-      blankCellIndices.push(emptyCellIndex);
-      // printBlankCellsASCII(blankCellIndices);
-      addEmptyCell(emptyCellIndex, blankCellIndices, maxEmptyCells);
+      blankCells.push(emptyCellIndex);
+      // printBlankCellsASCII(blankCells);
+      addEmptyCell(emptyCellIndex, blankCells, maxEmptyCells);
     }
+    // console.log(`numberOfColumns ${numberOfColumns}`);
   }
 
   function distributeObstacles(numberOfObstacles) {
     // get initial blank cell, randomly
-    printGameBoardASCII();
+    // printGameBoardASCII();
     const startCellIndex = Math.floor(Math.random() * cellStates.length);
-    const blankCellIndices = [];
-    blankCellIndices.push(startCellIndex);
-    addEmptyCell(startCellIndex, blankCellIndices,  cellStates.length - numberOfObstacles);
-    // printBlankCellsASCII(blankCellIndices);
-    blankCellIndices.forEach((cellIndex, entryIndex) => {
-      if(cellStates[cellIndex] === undefined) {
-          placeGameObject({ id: `obstacle_${entryIndex}`, type: 'obstacle'});
+    const blankCells = [];
+    blankCells.push(startCellIndex);
+    addEmptyCell(startCellIndex, blankCells,  cellStates.length - numberOfObstacles);
+    // printBlankCellsASCII(blankCells);
+    logger.info(`blank cells: %o`, blankCells);
+    let obstacleIndex = 0;
+    for (let i = 0; i < cellStates.length; i++) {
+      if(cellStates[i] === undefined && !blankCells.includes(i))
+          placeGameObject({ id: `obstacle_${obstacleIndex++}`, type: 'obstacle'}, i);
       }
-    })
-  }
+    }
 
-  function setUp(numberOfObstacles, numberOfAssets) {
-    // placeGameObject({ id: 'primary_target', type: 'target'});
-    distributeObstacles(numberOfObstacles)
-    // for (let i = 0; i < numberOfObstacles; i++) {
-    //   placeGameObject({ id: `obstacle_${i}`, type: 'obstacle'});
-    // }
+  function setUp(numberOfObstacles, numberOfAssets, includeTarget) {
+    logger.info(`Game - setup - includeTarget? ${includeTarget}`);
+    if(includeTarget) {
+      placeGameObject({id: 'primary_target', type: 'target'});
+    }
+    distributeObstacles(numberOfObstacles);
     for (let i = 0; i < numberOfAssets; i++) {
       placeGameObject({id: `asset_${i}`, type: 'asset'});
     }
@@ -179,8 +233,7 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
     logger.info(`Game - will process next frame`);
     if (statusManager.getCurrentStatus() === statusManager.states.starting) {
       statusManager.wait();
-      const gameData = await getGameData();
-      return gameData;
+      return await getGameData();
     } else {
       return await processFrameResponses(playerResponseData);
     }
@@ -283,7 +336,7 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
   }
 
   if (options !== undefined && Object.keys(options).length > 0) {
-    setUp(Math.round(getNumberOfCells() * options.percentObstacles), Math.round(getNumberOfCells() * options.percentAssets));
+    setUp(Math.round(getNumberOfCells() * options.percentObstacles), Math.round(getNumberOfCells() * options.percentAssets), options.includeTarget);
   }
 
   return {
@@ -307,4 +360,4 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
 module.exports = {
   positionDataFilters: positionDataFilters,
   createNewGame: createNewGame,
-}
+};

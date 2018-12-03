@@ -6,7 +6,7 @@
                 <path class="grid-lines" :d="gridLines"></path>
             </g>
             <g id="layoutObjectsLayer" class="layout-objects">
-                <path class="object" :d="layoutObjects"></path>
+                <g class="object" :d="layoutObjects"></g>
             </g>
             <g id="playerLayer" class="players"></g>
         </svg>
@@ -113,7 +113,7 @@
           return d && d.type === 'obstacle' ? d : null;
         })
           .append('g')
-          .attr('class', 'obstacle')
+          .attr('class', d => 'obstacle ' + d.id)
           .attr('transform', d => `translate(${x(d.column)}, ${y(d.row)})`);
         obstacle.append('rect')
           .attr("width", d => x(1))
@@ -136,17 +136,16 @@
           .attr("r", d => Math.min(x(0.4), y(0.4)))
           .attr("fill", 'gold');
 
-        if (false) {
-          asset
-            .append('svg:foreignObject')
-            .attr('color', 'rebeccapurple')
-            .attr('font-size', y(.65))
-            .attr('x', x(.1875))
-            .attr('y', y(.075))
-            .attr('height', y(1))
-            .attr('width', x(1))
-            .html('<i class="fa fa-asterisk"></i>')
-        }
+          // asset
+          //   .append('svg:foreignObject')
+          //   .attr('color', 'rebeccapurple')
+          //   .attr('font-size', y(.65))
+          //   .attr('x', x(.1875))
+          //   .attr('y', y(.075))
+          //   .attr('height', y(1))
+          //   .attr('width', x(1))
+          //   .html('<i class="fa fa-asterisk"></i>')
+
         // asset
         //   .append('use')
         //   .attr('class', 'icon')
