@@ -48,7 +48,7 @@ function connect(httpServer) {
   gameServer.origins((origin, callback) => {
     callback(null, true);
   });
-  ;
+
   newGame();
 //
 //   const chatServer = new ChatServer();

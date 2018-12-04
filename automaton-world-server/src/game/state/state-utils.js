@@ -86,8 +86,7 @@ module.exports.getUnoccupiedSlot = function (sparseArray) {
   }
 };
 
-module.exports.getNeighbourCellValues = function(sparseArray, cols, index, edgeValue) {
-  if(edgeValue === undefined) edgeValue = { type: 'edge' };
+module.exports.getNeighbourCellValues = function(sparseArray, cols, index, edgeValue = { type: 'edge' }) {
   const rows = Math.ceil(sparseArray.length / cols);
   // console.log(`rows=${rows}; cols=${cols}; index=${index}`);
   const up = Math.floor(index/cols) === 0 ? edgeValue :
@@ -98,6 +97,15 @@ module.exports.getNeighbourCellValues = function(sparseArray, cols, index, edgeV
     sparseArray[index+cols] !== undefined ? sparseArray[index+cols] : null;
   const left = index % cols === 0 ? edgeValue :
     sparseArray[index-1] !== undefined ? sparseArray[index-1] : null;
+  return {up: up, right: right, down: down, left: left};
+};
+
+module.exports.getNeighbourCellIndices = function(sparseArray, cols, index, edgeValue = undefined) {
+  const rows = Math.ceil(sparseArray.length / cols);
+  const up = Math.floor(index/cols) === 0 ? edgeValue : index - cols;
+  const right = index % cols === cols - 1 ? edgeValue : index + 1;
+  const down = Math.floor(index / cols) === rows - 1 ? edgeValue: index + cols;
+  const left = index % cols === 0 ? edgeValue : index - 1;
   return {up: up, right: right, down: down, left: left};
 };
 

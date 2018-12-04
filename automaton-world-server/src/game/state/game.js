@@ -7,7 +7,8 @@ const {
   getUnoccupiedSlot,
   getFilledIndices,
   getRelativeIndex,
-  getNeighbourCellValues
+  getNeighbourCellValues,
+  getNeighbourCellIndices
 } = require('./state-utils');
 
 const createGameObject = require('./game-object');
@@ -59,7 +60,7 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
       if (i % numberOfColumns === 0) {
         boardString += '\n'
       }
-      if(cellStates[i] === undefined) {
+      if (cellStates[i] === undefined) {
         boardString += `- `;
       } else {
         boardString += cellStates[i].type.toUpperCase().substr(0, 1) + ' ';
@@ -89,32 +90,32 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
       //   // boardString += i.toString().padStart(2, ' ') + ' ';
       // } else
       if (i % numberOfColumns === 0) {
-        boardString += spacer + i.toString().padStart( rowStartIndexWidth, ' ') + spacer;
+        boardString += spacer + i.toString().padStart(rowStartIndexWidth, ' ') + spacer;
       }
       let cellString = nullCharacter;
-      if(blankCells.includes(i)) {
-        if(blankCells.indexOf(i) === blankCells.length - 1) {
+      if (blankCells.includes(i)) {
+        if (blankCells.indexOf(i) === blankCells.length - 1) {
           cellString = terminusCharacter
-        } else if(blankCells.indexOf(i) === 0) {
+        } else if (blankCells.indexOf(i) === 0) {
           cellString = originCharacter;
-        } else if(highlightedCells !== undefined && highlightedCells.includes(i)) {
+        } else if (highlightedCells !== undefined && highlightedCells.includes(i)) {
           cellString = hiliteCharacter
         } else {
           cellString = emptyCellCharacter
         }
       }
       cellString = cellString.padEnd(columnWidth, ' ');
-      if(cellString.includes(originCharacter)) {
+      if (cellString.includes(originCharacter)) {
         cellString = '\u001B[32m' + cellString + '\u001B[0m';
-      } else if(cellString.includes(terminusCharacter)) {
+      } else if (cellString.includes(terminusCharacter)) {
         cellString = '\u001B[31m' + cellString + '\u001B[0m';
-      } else if(cellString.includes(hiliteCharacter)) {
+      } else if (cellString.includes(hiliteCharacter)) {
         cellString = '\u001B[36m' + cellString + '\u001B[0m';
       }
       boardString += cellString;
       // add the row number at the end of each row
-      if( i % numberOfColumns === numberOfColumns - 1) {
-        boardString +=  Math.floor(i / numberOfColumns) + '\n'; // .toString().padStart(rowNumberWidth, ' ') + '\n';
+      if (i % numberOfColumns === numberOfColumns - 1) {
+        boardString += Math.floor(i / numberOfColumns) + '\n'; // .toString().padStart(rowNumberWidth, ' ') + '\n';
       }
     }
     console.log(`\n${boardString}`);
@@ -138,21 +139,66 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
     return neighbourCellIndex;
   }
 
-  function addEmptyCell(fromIndex, blankCells, maxEmptyCells) {
-    printBlankCellsASCII(blankCells, [fromIndex]);
+  function getFirstAvailableCell(blankCells, exhaustedCells) {
+    let firstAvailableCell = undefined;
+    blankCells.some(cell => {
+      if (!exhaustedCells.has(cell)) {
+        firstAvailableCell = cell;
+        return true;
+      } else {
+        return false;
+      }
+    });
+    return firstAvailableCell;
+  }
+
+  function getCuspCell(blankCells, exhaustedCells, requiredAvailableNeighbours = 2) {
+    if (requiredAvailableNeighbours === 0) {
+      return;
+    }
+    let cuspCell = undefined;
+    for (let i = blankCells.length - 1; i >= 0; i--) {
+      const blank = blankCells[i];
+      if (exhaustedCells.has(blank)) {
+        continue;
+      }
+      const neighbourCellIndices = getNeighbourCellIndices(cellStates, numberOfColumns, blank);
+      const emptyCellCount = Object.keys(neighbourCellIndices).reduce((count, key) => {
+        if (neighbourCellIndices[key] !== undefined && !blankCells.includes(neighbourCellIndices[key])) {
+          count++;
+        }
+        return count;
+      }, 0);
+      if (emptyCellCount === requiredAvailableNeighbours) {
+        cuspCell = blank;
+        break;
+      }
+    }
+    if(cuspCell === undefined) {
+        cuspCell = getCuspCell(blankCells, exhaustedCells, requiredAvailableNeighbours - 1);
+    }
+    return cuspCell;
+  }
+
+  function addEmptyCell(fromCell, blankCells, maxEmptyCells, exhaustedCells = new Set()) {
+    printBlankCellsASCII(blankCells, [fromCell]);
     if (blankCells.length === maxEmptyCells) return;
-    const emptyCellIndex = getRandomNeighbourCellIndex(fromIndex, blankCells, true);
-    if (emptyCellIndex === undefined) {
-      const currentEntryIndex = blankCells.indexOf(fromIndex) || undefined;
-      const nextIndex = currentEntryIndex === blankCells.length - 1 ?
-        blankCells[0] :
-        getRandomNeighbourCellIndex(fromIndex, blankCells);
-      addEmptyCell(nextIndex, blankCells, maxEmptyCells);
+    const emptyCell = getRandomNeighbourCellIndex(fromCell, blankCells, true);
+    if (emptyCell === undefined) {
+      const currentEntryIndex = blankCells.indexOf(fromCell) || undefined;
+      // if the fromCell is the last cell to have been added...
+      const nextCell = currentEntryIndex === blankCells.length - 1 ?
+        // then get the first available cell that has at least on unmarked neighbour;
+        getCuspCell(blankCells, exhaustedCells) :
+        // otherwise, just initiate/continue a drunkard's walk starting at the fromCell
+        getRandomNeighbourCellIndex(fromCell, blankCells);
+      exhaustedCells.add(fromCell);
+      addEmptyCell(nextCell, blankCells, maxEmptyCells, exhaustedCells);
       // addEmptyCell(blankCells[currentEntryIndex - 1], blankCells, maxEmptyCells);
     } else {
-      blankCells.push(emptyCellIndex);
+      blankCells.push(emptyCell);
       // printBlankCellsASCII(blankCells);
-      addEmptyCell(emptyCellIndex, blankCells, maxEmptyCells);
+      addEmptyCell(emptyCell, blankCells, maxEmptyCells, exhaustedCells);
     }
     // console.log(`numberOfColumns ${numberOfColumns}`);
   }
@@ -163,19 +209,19 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
     const startCellIndex = Math.floor(Math.random() * cellStates.length);
     const blankCells = [];
     blankCells.push(startCellIndex);
-    addEmptyCell(startCellIndex, blankCells,  cellStates.length - numberOfObstacles);
+    addEmptyCell(startCellIndex, blankCells, cellStates.length - numberOfObstacles);
     // printBlankCellsASCII(blankCells);
     logger.info(`blank cells: %o`, blankCells);
     let obstacleIndex = 0;
     for (let i = 0; i < cellStates.length; i++) {
-      if(cellStates[i] === undefined && !blankCells.includes(i))
-          placeGameObject({ id: `obstacle_${obstacleIndex++}`, type: 'obstacle'}, i);
-      }
+      if (cellStates[i] === undefined && !blankCells.includes(i))
+        placeGameObject({id: `obstacle_${obstacleIndex++}`, type: 'obstacle'}, i);
     }
+  }
 
   function setUp(numberOfObstacles, numberOfAssets, includeTarget) {
     logger.info(`Game - setup - includeTarget? ${includeTarget}`);
-    if(includeTarget) {
+    if (includeTarget) {
       placeGameObject({id: 'primary_target', type: 'target'});
     }
     distributeObstacles(numberOfObstacles);
