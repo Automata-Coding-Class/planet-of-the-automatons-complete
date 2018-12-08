@@ -1,6 +1,6 @@
 # Planet of the Automatons (a working title)
 
-This README lives on the 'master' branch. Check out the 'development' branch for a version of the code that's much further along (if perpetually unstable.)
+This README lives on the 'master' branch. Check out the 'develop' branch for a version of the code that's much further along (if perpetually unstable.)
 
 ## Intent of the project
 
