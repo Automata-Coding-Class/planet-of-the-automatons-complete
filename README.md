@@ -1,5 +1,7 @@
 # Planet of the Automatons (a working title)
 
+This README lives on the 'master' branch. Check out the 'development' branch for a version of the code that's much further along (if perpetually unstable.)
+
 ## Intent of the project
 
 ### The Challenge
@@ -30,3 +32,7 @@ This is very much WIP. Future goals, from those within immediate reach all the w
 - improving the code, documentation, and setup logistics of this system so that it can be a convenient off-the-shelf resource that others can use for their own teaching… and hopefully improve through feedback or even direct contributions
 - developing the game itself for better esthetics and game play (to make it more compelling) and possibly opening up hooks for 'mods' to reskin the game, add functionality, etc.
 - creating an online edition of the game such that players can test their code against other players' code or game bots
+
+## More to Come
+
+System overview, setup instructions, and classroom observations and suggestions will all be added here as things develop and time allows.
