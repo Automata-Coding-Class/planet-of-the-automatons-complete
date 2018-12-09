@@ -1,9 +1,6 @@
 # automaton-world-complete
 all components of the Automaton World classroom app in one repo
 
-passphrase for the rootCA.key is '2cup3tsp'
-
-
 
 ## Important Links
 
@@ -24,6 +21,7 @@ passphrase for the rootCA.key is '2cup3tsp'
 - [Vue.js Mixins](https://vuejs.org/v2/guide/mixins.html)
 
 ### NodeJS
+- [Node.js - documentation home](https://nodejs.org/en/docs/)
 - [Node.js Child Processes: Everything you need to know: How to use spawn(), exec(), execFile(), and fork()](https://medium.freecodecamp.org/node-js-child-processes-everything-you-need-to-know-e69498fe970a)
 
 ### Socket.io
@@ -52,3 +50,7 @@ passphrase for the rootCA.key is '2cup3tsp'
 - [Remove console.log() Statements from Production JavaScript Apps](https://blog.benestudio.co/remove-console-log-statements-from-production-javascript-apps-7376adc89c7a)
 - [winston](https://github.com/winstonjs/winston) (ah, winston)
 - [Node.js util.format](https://nodejs.org/dist/latest/docs/api/util.html#util_util_format_format_args)
+
+### Graphics & UI
+- [Robohash](https://robohash.org) make robot images from any text string
+- [FontAwesome](https://fontawesome.com)
