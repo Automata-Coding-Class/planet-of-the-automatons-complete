@@ -69,7 +69,7 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
     console.log(`\n${boardString}`);
   }
 
-  // for development use only
+  // for development use only; very useful when working on board layout code
   function printBlankCellsASCII(blankCells, highlightedCells) {
     const spacerWidth = 2;
     const spacer = ''.padStart(spacerWidth);
@@ -110,7 +110,7 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
       } else if (cellString.includes(terminusCharacter)) {
         cellString = '\u001B[31m' + cellString + '\u001B[0m';
       } else if (cellString.includes(hiliteCharacter)) {
-        cellString = '\u001B[36m' + cellString + '\u001B[0m';
+        cellString = '\u001B[33m' + cellString + '\u001B[0m';
       }
       boardString += cellString;
       // add the row number at the end of each row
@@ -139,19 +139,7 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
     return neighbourCellIndex;
   }
 
-  function getFirstAvailableCell(blankCells, exhaustedCells) {
-    let firstAvailableCell = undefined;
-    blankCells.some(cell => {
-      if (!exhaustedCells.has(cell)) {
-        firstAvailableCell = cell;
-        return true;
-      } else {
-        return false;
-      }
-    });
-    return firstAvailableCell;
-  }
-
+  // returns the most recently added cell with the highest number of empty neighbours
   function getCuspCell(blankCells, exhaustedCells, requiredAvailableNeighbours = 2) {
     if (requiredAvailableNeighbours === 0) {
       return;
@@ -180,6 +168,7 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
     return cuspCell;
   }
 
+  // recursively defines which cells on the game board must remain empty of obstacles
   function addEmptyCell(fromCell, blankCells, maxEmptyCells, exhaustedCells = new Set()) {
     printBlankCellsASCII(blankCells, [fromCell]);
     if (blankCells.length === maxEmptyCells) return;
@@ -197,21 +186,18 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
       // addEmptyCell(blankCells[currentEntryIndex - 1], blankCells, maxEmptyCells);
     } else {
       blankCells.push(emptyCell);
-      // printBlankCellsASCII(blankCells);
       addEmptyCell(emptyCell, blankCells, maxEmptyCells, exhaustedCells);
     }
-    // console.log(`numberOfColumns ${numberOfColumns}`);
   }
 
   function distributeObstacles(numberOfObstacles) {
     // get initial blank cell, randomly
-    // printGameBoardASCII();
     const startCellIndex = Math.floor(Math.random() * cellStates.length);
     const blankCells = [];
     blankCells.push(startCellIndex);
+    // define the map of 'empty' cells (those which will not have an obstacle in them)
     addEmptyCell(startCellIndex, blankCells, cellStates.length - numberOfObstacles);
-    // printBlankCellsASCII(blankCells);
-    logger.info(`blank cells: %o`, blankCells);
+    // add obstacles to all other cells
     let obstacleIndex = 0;
     for (let i = 0; i < cellStates.length; i++) {
       if (cellStates[i] === undefined && !blankCells.includes(i))
@@ -308,7 +294,7 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
       framePackets: framePacketData
     }
   }
-
+/**/
   function moveEntry(fromIndex, toIndex) {
     if (toIndex !== fromIndex) {
       cellStates[toIndex] = cellStates[fromIndex];
