@@ -28,7 +28,7 @@ This is very much WIP. Future goals, from those within immediate reach all the w
 
 - improve and streamline the system based on findings from the workshops
 - get other developers involved, as planners, contributors, and workshop leaders
-- continue to modularize all aspects of the system so that more advanced topics can be covered in additional workshops (e.g., creating entirely new game logic, solving game problems using machine learning instead of explicit algorithms) and/or other areas of interest (building web clients, adding a database to enable long-term persistence or more sophisticated functionality)
+- continue to modularize all aspects of the system so that more advanced topics can be covered in additional workshops (e.g., creating entirely new game logic, solving game problems using machine learning instead of explicit algorithms) and/or other areas of interest (building web clients or desktop clients, adding a database to enable long-term persistence or more sophisticated functionality)
 - improving the code, documentation, and setup logistics of this system so that it can be a convenient off-the-shelf resource that others can use for their own teaching… and hopefully improve through feedback or even direct contributions
 - developing the game itself for better esthetics and game play (to make it more compelling) and possibly opening up hooks for 'mods' to reskin the game, add functionality, etc.
 - creating an online edition of the game such that players can test their code against other players' code or game bots
