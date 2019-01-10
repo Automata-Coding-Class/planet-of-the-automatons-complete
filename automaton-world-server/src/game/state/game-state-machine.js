@@ -5,7 +5,7 @@ module.exports = function createGameStateMachine() {
   const states = require('./game-states')();
 
   let allowSameStateTransitions = false;
-  let currentState = states.stopped;
+  let currentState = states.initialized;
 
   function getCurrentStatus() {
     return currentState;
@@ -57,6 +57,14 @@ module.exports = function createGameStateMachine() {
     setState(states.processingFrame);
   }
 
+  function pause() {
+    setState(states.paused);
+  }
+
+  function resume() {
+    setState(states.running);
+  }
+
   function stop() {
     setState(states.stopped);
   }
@@ -75,6 +83,8 @@ module.exports = function createGameStateMachine() {
     states: states,
     getCurrentStatus: getCurrentStatus,
     start: start,
+    pause: pause,
+    resume: resume,
     stop: stop,
     wait: wait,
     reset: reset,

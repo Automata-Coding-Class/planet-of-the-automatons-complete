@@ -271,6 +271,16 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
     }
   }
 
+  function pause() {
+    statusManager.pause();
+    return getGameData();
+  }
+
+  function resume() {
+    statusManager.resume();
+    return getGameData();
+  }
+
   function stop() {
     statusManager.stop();
     return getGameData();
@@ -379,6 +389,8 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
     getGameData: getGameData,
     setUp: setUp,
     start: start,
+    pause: pause,
+    resume: resume,
     stop: stop,
     nextFrame: nextFrame,
     getBoardPositions: getBoardPositions,

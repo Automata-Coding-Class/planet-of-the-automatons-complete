@@ -41,7 +41,7 @@ const newGame = function (rows = 12, columns = 12, gameOptions) {
   // currentGame = createGameStateMachine(rows, columns);
   currentGame = createNewGame(rows, columns, gameOptions);
   return currentGame;
-}
+};
 
 function connect(httpServer) {
   gameServer = require('socket.io')(httpServer);
@@ -49,7 +49,7 @@ function connect(httpServer) {
     callback(null, true);
   });
 
-  newGame();
+  // newGame();
 //
 //   const chatServer = new ChatServer();
 //   chatServer.connect(gameServer);
@@ -78,12 +78,22 @@ function connect(httpServer) {
   });
   stateServer.on('gameDataRequested', callback => {
     if (callback !== undefined) {
-      callback(currentGame.getGameData());
+      callback(currentGame !== undefined ? currentGame.getGameData() : undefined);
     }
   });
   stateServer.on('startGame', () => {
     stateServer.broadcastGameState(currentGame.start(eventServer.getActivePlayerList()));
     eventServer.broadcastGameStart();
+  });
+  stateServer.on('pauseGame', () => {
+    logger.info('WILL PAUSE GAME!!');
+    eventServer.pauseGame();
+    stateServer.broadcastGameState(currentGame.pause());
+  });
+  stateServer.on('resumeGame', () => {
+    logger.info('WILL RESUME GAME!!');
+    eventServer.resumeGame();
+    stateServer.broadcastGameState(currentGame.resume());
   });
   stateServer.on('stopGame', () => {
     eventServer.stopGame();

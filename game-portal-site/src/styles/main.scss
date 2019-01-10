@@ -160,6 +160,35 @@ blockquote {
           margin: 0 0.25em 0 0;
         }
         button {
+          background-color: transparent;
+          padding:0.5em;
+          .icon {
+            font-size: 2em;
+          }
+          &.play .icon {
+            @extend %fa-icon;
+            @extend .fas;
+            &:before {
+              content: fa-content($fa-var-play);
+            }
+          }
+          &.pause .icon {
+            @extend %fa-icon;
+            @extend .fas;
+            &:before {
+              content: fa-content($fa-var-pause);
+            }
+          }
+          &.stop .icon {
+            @extend %fa-icon;
+            @extend .fas;
+            &:before {
+              content: fa-content($fa-var-stop);
+            }
+          }
+          .label {
+            display: none;
+          }
           &[disabled] {
             opacity: $btn-disabled-opacity;
           }

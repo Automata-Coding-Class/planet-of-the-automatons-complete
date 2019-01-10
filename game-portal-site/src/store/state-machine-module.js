@@ -36,10 +36,10 @@ export default {
   },
   getters: {},
   mutations: {
-    newGameRowsChanged: function(state, newValue) {
+    newGameRowsChanged: function (state, newValue) {
       state.newGameRows = newValue;
     },
-    newGameColumnsChanged: function(state, newValue) {
+    newGameColumnsChanged: function (state, newValue) {
       state.newGameColumns = newValue;
     },
     setBoardDimensions: function (state, grid) {
@@ -47,23 +47,29 @@ export default {
       state.boardGrid.rows = parseInt(grid.rows);
       state.boardGrid.columns = parseInt(grid.columns);
     },
-    setLayout: function(state, layout) {
+    setLayout: function (state, layout) {
       state.layout = layout;
     },
-    setGameStatus: function(state, status) {
+    setGameStatus: function (state, status) {
       state.gameStatus = status;
     },
-    gameDataUpdated: function(state, gameData) {
+    gameDataUpdated: function (state, gameData) {
       console.log(`will update the game data state:`, gameData);
-      state.gameStatus = gameData.status;
-      state.boardGrid.rows = parseInt(gameData.parameters.boardGrid.rows);
-      state.boardGrid.columns = parseInt(gameData.parameters.boardGrid.columns);
-      state.layout = gameData.layout;
+      if (!gameData) {
+        console.log(`no game data`);
+        state.gameStatus = 'unknown';
+        state.layout = [];
+      } else {
+        state.gameStatus = gameData.status;
+        state.boardGrid.rows = parseInt(gameData.parameters.boardGrid.rows);
+        state.boardGrid.columns = parseInt(gameData.parameters.boardGrid.columns);
+        state.layout = gameData.layout;
+      }
     },
-    newPlayerAttributesReceived: function(state, playerAttributes) {
+    newPlayerAttributesReceived: function (state, playerAttributes) {
       state.playerAttributes = playerAttributes;
     },
-    clearGameState: function(state) {
+    clearGameState: function (state) {
       state.playerAttributes = {};
     }
   },
@@ -116,13 +122,20 @@ export default {
       dispatch('setPlayerAttributes', playerList);
       stateConnection.startGame();
     },
+    pauseGame({dispatch}, playerList) {
+      console.log(`StateMachine.pauseGame`);
+      stateConnection.pauseGame();
+    },
     setPlayerAttributes({commit, state}, playerList) {
       console.log(`available icons:`, state.stylingOptions.iconNames);
       const shuffledIcons = shuffleArray(state.stylingOptions.iconNames);
       console.log(`shuffledIcons:`, shuffledIcons);
       const playerAttributes = {};
-      playerList.forEach((p,i) => {
-        playerAttributes[p.userId] = {iconName: shuffledIcons[i], color: state.stylingOptions.colors[i]};
+      playerList.forEach((p, i) => {
+        playerAttributes[p.userId] = {
+          iconName: shuffledIcons[i],
+          color: state.stylingOptions.colors[i]
+        };
       })
       commit('newPlayerAttributesReceived', playerAttributes);
     },

@@ -5,7 +5,8 @@
                 <label for="newGameRowsInput">rows</label></span>
         and <span class="control-group"><input type="text" id="newGameColumnsInput" v-model="newGameColumns">
                 <label for="newGameColumnsInput">columns</label></span></span>
-        <span><button @click="playButtonAction" :disabled="playButtonDisabled">{{ playButtonText }}</button></span>
+        <span><button :class="playButtonClass" @click="playButtonAction" :disabled="playButtonDisabled"><span class="icon"><span class="label">{{ playButtonText }}</span></span></button></span>
+        <span><button class="stop" @click="stopButtonAction" :disabled="stopButtonDisabled"><span class="icon"><span class="label">Stop</span></span></button></span>
         <span>status = {{ gameStatus }}</span>
     </div>
 </template>
@@ -38,16 +39,27 @@
         }
       },
       newGameButtonDisabled: function() {
-        return this.$store.state.stateMachine.gameStatus !== 'stopped';
+        return !(/^(unknown|initialized|stopped|error)/i).test(this.$store.state.stateMachine.gameStatus); // !== 'stopped';
       },
       playButtonText: function() {
         const key = (/^[a-z]+/).exec(this.$store.state.stateMachine.gameStatus)[0];
         switch(key) {
           case 'awaiting':
-            return 'Stop Game';
+            return 'Pause Game';
             break;
           default:
             return 'Start Game';
+            break;
+        }
+      },
+      playButtonClass: function() {
+        const key = (/^[a-z]+/).exec(this.$store.state.stateMachine.gameStatus)[0];
+        switch(key) {
+          case 'awaiting':
+            return 'pause';
+            break;
+          default:
+            return 'play';
             break;
         }
       },
@@ -55,6 +67,21 @@
         switch(this.$store.state.stateMachine.gameStatus) {
           case 'unknown':
           case 'starting':
+          case 'stopped':
+          case 'error':
+            return true;
+            break;
+          default:
+            return false;
+            break;
+        }
+      },
+      stopButtonDisabled: function() {
+        switch(this.$store.state.stateMachine.gameStatus) {
+          case 'unknown':
+          case 'initialized':
+          case 'stopped':
+          case 'error':
             return true;
             break;
           default:
@@ -70,11 +97,14 @@
       },
       playButtonAction() {
         const key = (/^[a-z]+/).exec(this.$store.state.stateMachine.gameStatus)[0];
-        if(key === 'stopped') {
+        if(key === 'initialized') {
             this.$store.dispatch('stateMachine/startGame', this.$store.state.gameEvents.playerList);
-        }  else {
-          this.$store.dispatch('stateMachine/stopGame');
+        }  else if(!(/^(stopped|error)/i).test(key)) {
+          this.$store.dispatch('stateMachine/pauseGame');
         }
+      },
+      stopButtonAction() {
+        this.$store.dispatch('stateMachine/stopGame');
       }
     }
   }
