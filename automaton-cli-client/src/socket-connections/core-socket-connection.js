@@ -1,30 +1,31 @@
 const SocketClient = require('socket.io-client');
+const logger = require('../logger');
 
 module.exports = function createCoreSocketConnection(serverAddress) {
   const eventListeners = new Map();
 
   let socket;
   const createConnection = async function (namespace, authToken) {
-    console.log(`connecting to host address '${serverAddress}' with namespace '${namespace}'`);
+    logger.info(`connecting to host address '${serverAddress}' with namespace '${namespace}'`);
     socket = await SocketClient(`${serverAddress}/${namespace}`
       , {query: {token: authToken}}
       );
     socket.on('connect', () => {
-      console.log(`(${namespace})socket connection event received`);
+      logger.info(`(${namespace})socket connection event received`);
     })
     return socket;
   };
 
   const disconnect = () => {
     if (socket && socket.connected) {
-      console.log(`closing socket`);
+      logger.info(`closing socket`);
       socket.close();
     }
     socket = undefined;
   };
 
   const ping = () => {
-    console.log(`pinging the state machine socket...`);
+    logger.info(`pinging the state machine socket...`);
     return new Promise((resolve) => {
       socket.emit('penguin', function (response) {
         resolve(response);

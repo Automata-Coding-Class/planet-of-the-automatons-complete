@@ -49,7 +49,6 @@ function connect(httpServer) {
     callback(null, true);
   });
 
-  // newGame();
 //
 //   const chatServer = new ChatServer();
 //   chatServer.connect(gameServer);
@@ -69,7 +68,9 @@ function connect(httpServer) {
       .addPercentObstacles(0.2)
       .addPercentAssets(0.1);
     const game = newGame(options.rows, options.columns, gameOptions);
-    stateServer.newGameHandler(game.getGameData());
+    const gameData = game.getGameData();
+    eventServer.broadcastGameInitialization(gameData);
+    stateServer.newGameHandler(gameData);
   });
   stateServer.on('gameParamsRequest', request => {
     if (request.callback !== undefined) {
@@ -97,7 +98,7 @@ function connect(httpServer) {
   });
   stateServer.on('stopGame', () => {
     eventServer.stopGame();
-    stateServer.broadcastGameState(currentGame.stop());
+    stateServer.broadcastGameState(currentGame !== undefined ? currentGame.stop() : undefined);
   });
 
   function advanceFrame(frameResponseData) {

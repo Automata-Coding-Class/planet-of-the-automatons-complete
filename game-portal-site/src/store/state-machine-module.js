@@ -126,6 +126,10 @@ export default {
       console.log(`StateMachine.pauseGame`);
       stateConnection.pauseGame();
     },
+    resumeGame({dispatch}, playerList) {
+      console.log(`StateMachine.resumeGame`);
+      stateConnection.resumeGame();
+    },
     setPlayerAttributes({commit, state}, playerList) {
       console.log(`available icons:`, state.stylingOptions.iconNames);
       const shuffledIcons = shuffleArray(state.stylingOptions.iconNames);

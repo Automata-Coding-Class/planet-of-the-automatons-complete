@@ -5,8 +5,9 @@
                 <label for="newGameRowsInput">rows</label></span>
         and <span class="control-group"><input type="text" id="newGameColumnsInput" v-model="newGameColumns">
                 <label for="newGameColumnsInput">columns</label></span></span>
-        <span><button :class="playButtonClass" @click="playButtonAction" :disabled="playButtonDisabled"><span class="icon"><span class="label">{{ playButtonText }}</span></span></button></span>
         <span><button class="stop" @click="stopButtonAction" :disabled="stopButtonDisabled"><span class="icon"><span class="label">Stop</span></span></button></span>
+        <span><button class="pause" @click="playButtonAction" :disabled="pauseButtonDisabled"><span class="icon"><span class="label">{{ playButtonText }}</span></span></button></span>
+        <span><button class="play" @click="playButtonAction" :disabled="playButtonDisabled"><span class="icon"><span class="label">{{ playButtonText }}</span></span></button></span>
         <span>status = {{ gameStatus }}</span>
     </div>
 </template>
@@ -52,21 +53,27 @@
             break;
         }
       },
-      playButtonClass: function() {
-        const key = (/^[a-z]+/).exec(this.$store.state.stateMachine.gameStatus)[0];
-        switch(key) {
-          case 'awaiting':
-            return 'pause';
-            break;
-          default:
-            return 'play';
-            break;
-        }
-      },
       playButtonDisabled: function() {
         switch(this.$store.state.stateMachine.gameStatus) {
           case 'unknown':
           case 'starting':
+          case 'running':
+          case 'awaitingFrameResponse':
+          case 'stopped':
+          case 'error':
+            return true;
+            break;
+          default:
+            return false;
+            break;
+        }
+      },
+      pauseButtonDisabled: function() {
+        switch(this.$store.state.stateMachine.gameStatus) {
+          case 'unknown':
+          case 'initialized':
+          case 'starting':
+          case 'paused':
           case 'stopped':
           case 'error':
             return true;
@@ -97,8 +104,12 @@
       },
       playButtonAction() {
         const key = (/^[a-z]+/).exec(this.$store.state.stateMachine.gameStatus)[0];
+        // debugger;
         if(key === 'initialized') {
             this.$store.dispatch('stateMachine/startGame', this.$store.state.gameEvents.playerList);
+        } else if(key === 'paused') {
+          console.log(`gonna resume that!`);
+          this.$store.dispatch('stateMachine/resumeGame');
         }  else if(!(/^(stopped|error)/i).test(key)) {
           this.$store.dispatch('stateMachine/pauseGame');
         }

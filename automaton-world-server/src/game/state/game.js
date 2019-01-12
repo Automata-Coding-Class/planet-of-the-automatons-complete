@@ -1,4 +1,5 @@
 const logger = require('../../logger');
+const uuid = require('uuid/v1');
 const createGameStateMachine = require('./game-state-machine');
 
 const {
@@ -21,6 +22,8 @@ const positionDataFilters = {
 };
 
 const createNewGame = function createNewGame(numberOfRows, numberOfColumns, options) {
+  const gameId = uuid();
+
   numberOfRows = parseInt(numberOfRows);
   numberOfColumns = parseInt(numberOfColumns);
   // options are:
@@ -298,6 +301,7 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
     const framePacketData = makeFramePackets();
     logger.info(`framePacketData: %o`, framePacketData);
     return {
+      id: gameId,
       status: statusManager.getCurrentStatus().name,
       parameters: getGameParameters(),
       layout: getCurrentState(),

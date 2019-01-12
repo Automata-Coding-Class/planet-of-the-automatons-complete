@@ -8,7 +8,7 @@ const bot = require('../bot');
 // require(path.join(path.dirname(require.main.filename), '../package.json')).name ||
 process.env.APP_NAME = process.env.PROCESS_NAME/* || require.main.filename*/;
 
-logger.info(`process ${process.pid} launched`);
+logger.info(`process ${process.pid} launched. NODE_ENV = ${process.env.NODE_ENV}`);
 
 const run = async () => {
   showStartMenu()

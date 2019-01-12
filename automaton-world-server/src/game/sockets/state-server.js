@@ -52,8 +52,7 @@ class StateServer extends SocketServerCore {
     });
 
     socket.on('gameDataRequest', (fn) => {
-      this.log(`quatro. fn: %o`, fn);
-      this.emit('gameDataRequested', (gameData) => {
+      this.emit(  'gameDataRequested', (gameData) => {
         fn(gameData);
       });
     })

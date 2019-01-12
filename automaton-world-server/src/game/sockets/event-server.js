@@ -56,12 +56,20 @@ class EventServer extends SocketServerCore {
     }, [])
   }
 
+  broadcastGameInitialization(gameData) {
+    this.log('broadcasting game initialization for game %s', JSON.stringify(gameData));
+    const sanitizedData = Object.assign({}, gameData);
+    delete sanitizedData.layout;
+    this.publishEvent('newGameCreated', sanitizedData);
+  }
+
   broadcastGameStart() {
     this.log('broadcasting game start');
     this.distributeGameState();
   }
 
   pauseGame() {
+    this.log(`pauseGame - pendingStates: ${JSON.stringify(this.pendingStates)}`);
     this.publishEvent('gamePaused');
     // this.pendingStates.clear();
   }
