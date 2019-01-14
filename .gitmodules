@@ -1,0 +1,4 @@
+[submodule "cli-client"]
+	path = cli-client
+	url = https://github.com/Automata-Coding-Class/planet-of-the-automatons-client
+	branch = develop
