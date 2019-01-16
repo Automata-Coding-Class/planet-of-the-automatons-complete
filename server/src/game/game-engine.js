@@ -1,7 +1,6 @@
 const logger = require('../logger');
 const createNewGame = require('./state/game').createNewGame;
 const createGameOptions = require('./state/game-options');
-const ChatServer = require('./chat-server');
 const EventServer = require('./sockets/event-server');
 const StateServer = require('./sockets/state-server');
 
@@ -38,7 +37,6 @@ const broadcastUserList = function (server) {
 };
 
 const newGame = function (rows = 12, columns = 12, gameOptions) {
-  // currentGame = createGameStateMachine(rows, columns);
   currentGame = createNewGame(rows, columns, gameOptions);
   return currentGame;
 };
@@ -49,19 +47,11 @@ function connect(httpServer) {
     callback(null, true);
   });
 
-//
-//   const chatServer = new ChatServer();
-//   chatServer.connect(gameServer);
-//   chatServer.on('userJoined', userJoinedHandler);
-//   chatServer.on('userLeft', userLeftHandler);
-//
   const eventServer = new EventServer(gameServer);
   eventServer.connect();
-//   eventServer.on('userJoined', userJoinedHandler);
-//   eventServer.on('userLeft', userLeftHandler);
-//
   const stateServer = new StateServer(gameServer);
   stateServer.connect();
+
   stateServer.on('newGameRequested', options => {
     // TODO: replace this with code that's responsive to the request
     const gameOptions = createGameOptions()
@@ -123,41 +113,9 @@ function connect(httpServer) {
   eventServer.on('frameResponsesReceived', (frameResponseData) => {
       logger.info(`GameEngine - frameResponseReceived: %o`, frameResponseData);
       advanceFrame(frameResponseData);
-    // currentGame.nextFrame(frameResponseData)
-    //   .then(updatedData => {
-    //     logger.info(`GameEngine - updatedData: %o`, updatedData);
-    //   })
   });
-  // stateServer.on('startGame', () => {
-  // const activePlayerList = eventServer.getActivePlayerList();
-  //   const initialGameState = currentGame.start(activePlayerList);
-  //   stateServer.broadcastGameState(initialGameState);
-  //   // eventServer.startGameLoop(activePlayerList);
-  // });
-//
-//   stateServer.on('userJoined', userJoinedHandler);
-//   stateServer.on('userLeft', userLeftHandler);
-//   // TODO: surely there's a better way to pass function references to an eventemitter?
-//   // i.e., directly, without the closure
-//   stateServer.on('gameStarted', () => eventServer.sendGameEvent('game-started'));
-//   stateServer.on('newFrame', (frame) => eventServer.distributeFrame(frame));
-//   eventServer.on('startGameRequested', () => stateServer.startGame());
-//   eventServer.on('stopGameRequested', () => stateServer.stopGame());
-//   eventServer.on('userJoined',
-//     (socketInfo, userData) => {
-//       stateServer.addNewUser(socketInfo, userData);
-//     });
-//   eventServer.on('userLeft',
-//     (socketInfo) => {
-//       stateServer.removeUser(socketInfo);
-//     });
-//   eventServer.on('clientReady', id => stateServer.onClientReady(id) );
-//   eventServer.on('playerRespondedToFrame', response => stateServer.onPlayerFrameResponse(response));
-//
   gameServer.on('connection', function (socket) {
     logger.info(`GameServer - client connected: socket.id='%s', namespace='%s'`, socket.id, socket.nsp.name);
-    // socket.broadcast.emit('announcement', 'foobar'); // sends to all _other_ sockets (I think)
-    // gameServer.emit('announcement', 'a user connected');
     socket.on('disconnect', function () {
       logger.info('GameEngine - client disconnected: %o', socket.decodedToken);
     });
