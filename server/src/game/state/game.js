@@ -234,11 +234,11 @@ const createNewGame = function createNewGame(options) {
     statusManager.start();
     gameTimer.start()
       .then(() => {
-        logger.info(`timer promise fulfilled`);
+        logger.info(`initial timer promise fulfilled`);
         endGame();
       },
         err => {
-        logger.info(`timer promise rejected`);
+        logger.info(`initial timer promise rejected`);
         });
     return getGameData();
   }
@@ -294,11 +294,19 @@ const createNewGame = function createNewGame(options) {
 
   function pause() {
     statusManager.pause();
+    gameTimer.pause();
     return getGameData();
   }
 
   function resume() {
     statusManager.resume();
+    gameTimer.resume().then(() => {
+        logger.info(`resumed timer promise fulfilled`);
+        endGame();
+      },
+      err => {
+        logger.info(`resumed timer promise rejected`);
+      });
     return getGameData();
   }
 
