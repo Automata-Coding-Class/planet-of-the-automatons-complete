@@ -10,8 +10,13 @@
                 <span class="score">{{player.score}}</span>
             </li>
             <li class="total">
-                <span class="label">Total</span>
+                <span class="label">Combined</span>
                 <span class="score">{{totalScore}}</span>
+            </li>
+            <li class="percent">
+                <span class="label">Max possible: {{boardGrid.totalAssets}}</span>
+                <span class="separator">&gt;</span>
+                <span class="score">{{percentScore}}%</span>
             </li>
         </ul>
     </div>
@@ -24,12 +29,16 @@
     name: "ScoreBoard",
     computed: {
       ... mapState('gameEvents', ['eventLog', 'playerList']),
+      ... mapState('stateMachine', ['boardGrid']),
       ... mapGetters('stateMachine', ['players']),
-      totalScore(state) {
+      totalScore() {
         return this.players.reduce((totalScore, player) => {
           totalScore += player.score;
           return totalScore;
         }, 0);
+      },
+      percentScore() {
+        return this.boardGrid.totalAssets === 0 ? 0 : Math.round(1000 * this.totalScore / this.boardGrid.totalAssets) / 10;
       }
     },
     methods: {

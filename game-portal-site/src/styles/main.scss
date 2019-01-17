@@ -217,7 +217,7 @@ blockquote {
             list-style-type: none;
             padding-left: 0;
 
-            .player, .total {
+            .player, .total, .percent {
               display: flex;
               position: relative;
               padding: 1rem;
@@ -243,7 +243,7 @@ blockquote {
 
               }
 
-              .name, .label, .score {
+              .name, .label, .separator, .score {
                 position: relative;
                 display: block;
                 bottom: 0.25em;
@@ -255,11 +255,26 @@ blockquote {
                 flex-grow: 4;
               }
 
+              .separator {
+                flex-grow: 6;
+                //font-size: 1.5em;
+                align-self: flex-end;
+              }
+
               //.score {
               //  position: absolute;
               //  top: 0;
               //  right: 0;
               //}
+            }
+
+            .total {
+              border-top: solid 1px black;
+              box-shadow: none;
+            }
+            .percent {
+              color: silver;
+              box-shadow: none;
             }
           }
         }
@@ -343,7 +358,7 @@ blockquote {
             }
           }
 
-          .status {
+          .status, .elapsed-time {
             display: block;
             text-align: center;
           }

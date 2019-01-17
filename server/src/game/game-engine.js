@@ -36,8 +36,8 @@ const broadcastUserList = function (server) {
   server.of('state').emit('connection-list', flattenedUserList);
 };
 
-const newGame = function (rows = 12, columns = 12, gameOptions) {
-  currentGame = createNewGame(rows, columns, gameOptions);
+const newGame = function (gameOptions = {rows: 12, columns: 12, duration: 30}) {
+  currentGame = createNewGame(gameOptions);
   return currentGame;
 };
 
@@ -54,10 +54,15 @@ function connect(httpServer) {
 
   stateServer.on('newGameRequested', options => {
     // TODO: replace this with code that's responsive to the request
-    const gameOptions = createGameOptions()
+    const gameOptions = createGameOptions(options)
       .addPercentObstacles(0.2)
       .addPercentAssets(0.1);
-    const game = newGame(options.rows, options.columns, gameOptions);
+    const game = newGame(gameOptions);
+    game.on('gameOver', () => {
+      logger.info(`RECEIVED GAME OVER EVENT`);
+      finishGame();
+    });
+
     const gameData = game.getGameData();
     eventServer.broadcastGameInitialization(gameData);
     stateServer.newGameHandler(gameData);
@@ -86,9 +91,14 @@ function connect(httpServer) {
     eventServer.resumeGame();
     stateServer.broadcastGameState(currentGame.resume());
   });
-  stateServer.on('stopGame', () => {
+
+  function finishGame() {
     eventServer.stopGame();
     stateServer.broadcastGameState(currentGame !== undefined ? currentGame.stop() : undefined);
+  }
+
+  stateServer.on('stopGame', () => {
+    finishGame();
   });
 
   function advanceFrame(frameResponseData) {

@@ -1,5 +1,5 @@
-module.exports =  createGameOptionsObject = () => {
-  const optionsObject = {type: 'gameOptions'};
+module.exports =  createGameOptionsObject = (initialOptions) => {
+  const optionsObject = Object.assign({type: 'gameOptions'}, initialOptions);
   optionsObject.addPercentObstacles = (percentObstacles) => {
     if( isNaN(parseFloat(percentObstacles))) {
       throw `value ${percentObstacles} is not a number`;

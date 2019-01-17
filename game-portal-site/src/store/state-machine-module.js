@@ -20,16 +20,23 @@ export default {
   namespaced: true,
   state: {
     gameStatus: 'unknown',
+    gameTime: {
+      limit: 0,
+      elapsed: 0,
+    },
+    elapsedGameTime: 0,
     newGameRows: 12,
     newGameColumns: 12,
+    newGameDuration: 30,
     boardGrid: {
       rows: 5,
-      columns: 5
+      columns: 5,
+      totalAssets: 0
     },
     stylingOptions: {
       iconNames: ['cat', 'dog', 'crow', 'fish', 'dove', 'frog',
         'hippo', 'horse', 'kiwi-bird', 'otter', 'spider'],
-      colors: ['red', 'orange', 'green', 'blue', 'indigo', 'violet', 'rebeccapurple']
+      colors: ['#ff7400', '#d9005b', '#84e900', '#009999', '#ec6aa1', '#a64b00', '#8d003b']
     },
     layout: {},
     playerAttributes: {},
@@ -54,6 +61,9 @@ export default {
     newGameColumnsChanged: function (state, newValue) {
       state.newGameColumns = newValue;
     },
+    newGameDurationChanged: function (state, newValue) {
+      state.newGameDuration = newValue;
+    },
     setBoardDimensions: function (state, grid) {
       console.log(`setBoardDimensions:`, grid);
       state.boardGrid.rows = parseInt(grid.rows);
@@ -72,12 +82,19 @@ export default {
         state.gameStatus = 'unknown';
         state.layout = [];
         state.playerData = {};
+        state.elapsedGameTime = 0;
+        state.gameTime.limit = 0;
+        state.gameTime.elapsed = 0;
+        state.boardGrid.totalAssets = 0;
       } else {
         state.gameStatus = gameData.status;
         state.boardGrid.rows = parseInt(gameData.parameters.boardGrid.rows);
         state.boardGrid.columns = parseInt(gameData.parameters.boardGrid.columns);
         state.layout = gameData.layout;
         state.playerData = gameData.playerData;
+        state.gameTime.limit = gameData.parameters.duration;
+        state.gameTime.elapsed = Math.min(gameData.elapsedTime, gameData.parameters.duration);
+        state.boardGrid.totalAssets = gameData.totalAssets;
       }
     },
     newPlayerAttributesReceived: function (state, playerAttributes) {

@@ -1,6 +1,7 @@
 const logger = require('../../logger');
 const uuid = require('uuid/v1');
 const createGameStateMachine = require('./game-state-machine');
+const createGameTimer = require('./game-timer');
 
 const {
   getRandomIntegerInRange,
@@ -21,18 +22,23 @@ const positionDataFilters = {
   assetsOnly: positionData => positionData.data.type === 'asset',
 };
 
-const createNewGame = function createNewGame(numberOfRows, numberOfColumns, options) {
+const createNewGame = function createNewGame(options) {
   const gameId = uuid();
 
-  numberOfRows = parseInt(numberOfRows);
-  numberOfColumns = parseInt(numberOfColumns);
-  // options are:
+  const numberOfRows = parseInt(options.rows);
+  const numberOfColumns = parseInt(options.columns);
+  const duration = parseInt(options.duration);
+
+  const gameTimer = createGameTimer(duration);
+
+  // options also include:
   // - percentObstacles: portion of the board to fill with obstacles (0.0 - 1.0)
   // - percentAssets: portions of the board to fill with assets (0.0 - 1.0)
   //                                         }
   const cellStates = new Array(numberOfRows * numberOfColumns);
   const statusManager = createGameStateMachine();
   const playerData = new Map();
+  const numberOfAssets = Math.round(getNumberOfCells() * options.percentAssets);
 
   function getNumberOfCells() {
     return cellStates.length;
@@ -40,7 +46,8 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
 
   function getGameParameters() {
     return {
-      boardGrid: {rows: numberOfRows, columns: numberOfColumns}
+      boardGrid: {rows: numberOfRows, columns: numberOfColumns},
+      duration: gameTimer.duration
     }
   }
 
@@ -225,6 +232,14 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
     const stateSnapshot = [].concat(cellStates);
     distributePlayers(players);
     statusManager.start();
+    gameTimer.start()
+      .then(() => {
+        logger.info(`timer promise fulfilled`);
+        endGame();
+      },
+        err => {
+        logger.info(`timer promise rejected`);
+        });
     return getGameData();
   }
 
@@ -292,6 +307,10 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
     return getGameData();
   }
 
+  function endGame() {
+    dispatchEvent('gameOver');
+  }
+
   function loadState(savedState) {
     cellStates.splice(0, cellStates.length, ...savedState);
   }
@@ -314,10 +333,12 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
     return {
       id: gameId,
       status: statusManager.getCurrentStatus().name,
+      elapsedTime: gameTimer.getElapsedTime(),
       parameters: getGameParameters(),
       layout: getCurrentState(),
       framePackets: framePacketData,
-      playerData: getCurrentPlayerStates()
+      playerData: getCurrentPlayerStates(),
+      totalAssets: numberOfAssets
     }
   }
 
@@ -399,8 +420,29 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
   }
 
   if (options !== undefined && Object.keys(options).length > 0) {
-    setUp(Math.round(getNumberOfCells() * options.percentObstacles), Math.round(getNumberOfCells() * options.percentAssets), options.includeTarget);
+    setUp(Math.round(getNumberOfCells() * options.percentObstacles), numberOfAssets, options.includeTarget);
   }
+
+  // event publishing
+  const eventListeners = new Map();
+
+  const addEventListener = function (eventType, listener) {
+    if (!eventListeners.has(eventType)) {
+      eventListeners.set(eventType, []);
+    }
+    const listenerArray = eventListeners.get(eventType);
+    if (!listenerArray.includes(listener)) {
+      listenerArray.push(listener);
+    }
+  };
+
+  const dispatchEvent = async function(eventType, ...args) {
+    if (eventListeners.has(eventType)) {
+      eventListeners.get(eventType).map(handler => handler(...args));
+    }
+  };
+
+
 
   return {
     getNumberOfCells: getNumberOfCells,
@@ -418,7 +460,8 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
     distributePlayers: distributePlayers,
     loadState: loadState,
     processFrameResponses: processFrameResponses,
-    printGameBoardASCII: printGameBoardASCII
+    printGameBoardASCII: printGameBoardASCII,
+    on: addEventListener
   }
 };
 
