@@ -32,6 +32,7 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
   //                                         }
   const cellStates = new Array(numberOfRows * numberOfColumns);
   const statusManager = createGameStateMachine();
+  const playerData = new Map();
 
   function getNumberOfCells() {
     return cellStates.length;
@@ -165,8 +166,8 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
         break;
       }
     }
-    if(cuspCell === undefined) {
-        cuspCell = getCuspCell(blankCells, exhaustedCells, requiredAvailableNeighbours - 1);
+    if (cuspCell === undefined) {
+      cuspCell = getCuspCell(blankCells, exhaustedCells, requiredAvailableNeighbours - 1);
     }
     return cuspCell;
   }
@@ -228,8 +229,10 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
   }
 
   function distributePlayers(players) {
+    playerData.clear();
     players.forEach(player => {
       placeGameObject({type: player.loginType, id: player.userId, name: player.username});
+      playerData.set(player.userId, {score: 0, assets: [], rawData: player});
     });
   }
 
@@ -297,6 +300,14 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
     return [].concat(cellStates);
   }
 
+  function getCurrentPlayerStates() {
+    const playerStates = {};
+    playerData.forEach((playerData, playerId) => {
+      playerStates[playerId] = playerData;
+    });
+    return playerStates;
+  }
+
   function getGameData() {
     const framePacketData = makeFramePackets();
     logger.info(`framePacketData: %o`, framePacketData);
@@ -305,10 +316,12 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
       status: statusManager.getCurrentStatus().name,
       parameters: getGameParameters(),
       layout: getCurrentState(),
-      framePackets: framePacketData
+      framePackets: framePacketData,
+      playerData: getCurrentPlayerStates()
     }
   }
-/**/
+
+  /**/
   function moveEntry(fromIndex, toIndex) {
     if (toIndex !== fromIndex) {
       cellStates[toIndex] = cellStates[fromIndex];
@@ -347,6 +360,10 @@ const createNewGame = function createNewGame(numberOfRows, numberOfColumns, opti
               if (
                 destinationCellOccupant !== undefined && destinationCellOccupant.type === 'asset') {
                 const asset = removeEntry(destinationCellIndex);
+                if (playerData.has(playerId)) {
+                  playerData.get(playerId).score++;
+                  logger.info(`*** UPDATED SCORE FOR PLAYER '${playerId}': ${playerData.get(playerId).score}`);
+                }
                 destinationCellOccupant = undefined;
                 changeSummary.push({
                   change: 'acquisition',

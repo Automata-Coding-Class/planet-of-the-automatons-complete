@@ -5,7 +5,7 @@ const gameEventConnection = GameEventConnection.createEventConnection();
 export default {
   namespaced: true,
   state: {
-    playerList: [],
+    connectedPlayerList: [],
     maxLogLength: 500,
     eventLog: []
   },
@@ -18,7 +18,7 @@ export default {
       }
     },
     playerListReceived(state, playerList) {
-      state.playerList = playerList;
+      state.connectedPlayerList = playerList;
     }
   },
   actions: {

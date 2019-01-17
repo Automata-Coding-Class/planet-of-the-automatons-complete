@@ -1,22 +1,22 @@
 <template>
     <div class="component system-status">
         <h3>System Status</h3>
-        <div><span class="label">Player list: </span>
-            <ul class="player-list">
+        <div class="player-list"><span class="label">Connected Players: </span>
+            <ul>
                 <li class="player"
                     :style="getPlayerStyle(player.userId)"
-                    v-for="player in playerList">
+                    v-for="player in connectedPlayerList">
                     <span :class="getPlayerIconClass(player.userId)">&nbsp;</span>
                     <span class="name">{{player.username}}</span>
                 </li>
             </ul>
         </div>
-        <h4>Event Log</h4>
-        <ul>
-            <li v-for="entry in recentEvents">{{entry.type}} - {{formatTime(entry.timestamp)}}:
-                {{entry.payload}}
-            </li>
-        </ul>
+        <!--<h4>Event Log</h4>-->
+        <!--<ul>-->
+            <!--<li v-for="entry in recentEvents">{{entry.type}} - {{formatTime(entry.timestamp)}}:-->
+                <!--{{entry.payload}}-->
+            <!--</li>-->
+        <!--</ul>-->
     </div>
 </template>
 
@@ -27,7 +27,7 @@
   export default {
     name: "SystemStatus",
     computed: {
-      ... mapState('gameEvents', ['eventLog', 'playerList']),
+      ... mapState('gameEvents', ['eventLog', 'connectedPlayerList']),
       ... mapState('stateMachine', ['playerAttributes']),
       recentEvents() {
         return this.eventLog.slice(0, 5);

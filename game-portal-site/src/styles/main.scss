@@ -8,6 +8,13 @@ $btn-disabled-opacity: 0.4;
 $dimmed-text-color: desaturate(lighten($body-color, 30%), 20%);
 
 $show-sidebar: false;
+$base-color: #007bff;
+// update the theme
+$theme-colors: (
+        "primary": darken($base-color, 15%),
+        "secondary": desaturate($base-color, 40%)
+);
+
 
 @import '~bootstrap/scss/bootstrap.scss';
 $fa-font-path: '../../public/fontawesome/webfonts';
@@ -22,41 +29,57 @@ body {
 
 blockquote {
   font-style: italic;
+
   &:before {
     content: "“"
   }
+
   &:after {
     content: "“"
   }
+}
+
+.decorator {
+  color: $dimmed-text-color;
+  font-weight: bold;
+  padding: 0 0.5em;
 }
 
 #app {
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
   #banner {
     @include make-row();
+
     nav {
       @include make-col-ready();
       @include make-col(10);
+
       a {
         font-weight: bold;
         color: #2c3e50;
+
         &.router-link-exact-active {
           color: #42b983;
         }
       }
+
       & > a {
         margin-right: 0.5em;
+
         &::after {
           content: " |";
           color: $body-color;
         }
       }
     }
+
     .login-status {
       @include make-col-ready();
       @include make-col(2);
+
       .sign-out {
         &:hover {
           cursor: pointer;
@@ -64,13 +87,16 @@ blockquote {
         }
       }
     }
+
     nav, .login-status {
       padding: 15px 30px;
     }
   }
+
   .main-view {
     @include make-row();
     padding: 0 30px;
+
     .content.main {
       $main-cols: 9;
       @if $show-sidebar == false {
@@ -79,34 +105,49 @@ blockquote {
 
       @include make-col-ready();
       @include make-col($main-cols);
+      @include make-row();
+
       & > .component {
-        border: $component-border;
+        // uncomment the following line when working on component layout...
+        //border: $component-border;
       }
+
       .login {
         border: none;
         max-width: 600px;
       }
+
       .game-board {
+        @include make-col-ready();
+        @include make-col(9);
+
         svg {
           border: solid 1px gainsboro;
           background-color: $body-bg;
           margin: 25px;
+          margin-left: 0;
+          margin-right: 0;
+
           path {
             fill: none;
             stroke: #76BF8A;
             stroke-width: 3px;
           }
+
           &.stacked-area {
             path.line {
               stroke: magenta
             }
+
             path.selector {
               stroke: aqua;
             }
+
             path.area {
               fill: beige;
             }
           }
+
           &.game-view {
             .grid {
               path.grid-lines {
@@ -115,23 +156,28 @@ blockquote {
                 stroke: none;
               }
             }
+
             #layoutObjectsLayer {
               .obstacle {
                 rect {
                   fill: black;
                 }
               }
+
               .asset {
                 circle {
                   fill: lightgray;
                   //stroke-width: 2px;
                   //stroke: magenta;
                 }
+
                 .icon {
                   fill: rebeccapurple;
                 }
+
                 image {
                   fill: blue !important;
+
                   path {
                     fill: aqua;
                     stroke: #990000;
@@ -139,6 +185,7 @@ blockquote {
                 }
               }
             }
+
             #playerLayer {
               .player {
                 color: dodgerblue;
@@ -147,84 +194,199 @@ blockquote {
           }
         }
       }
-      .game-controls {
-        & > .control-group {
-          display: block;
-          .control-group {
-            white-space: nowrap;
+
+      .game-info {
+        @include make-col-ready();
+        @include make-col(3);
+        @include make-row();
+
+        padding: 0;
+
+        & > .component {
+          margin-left: 0;
+          padding: 0 !important;
+        }
+
+        $info-column-subcolumns: 3;
+
+        .score-board {
+          @include make-col-ready();
+          @include make-col(3, $info-column-subcolumns);
+
+          .player-list {
+            list-style-type: none;
+            padding-left: 0;
+
+            .player, .total {
+              display: flex;
+              position: relative;
+              padding: 1rem;
+              //border-bottom: $item-border;
+              box-shadow: $box-shadow-sm;
+              //margin-right: 0.25em;
+              .fa {
+                margin-right: 1rem;
+                font-size: 2em;
+              }
+
+              align-items: center;
+
+              .icon {
+                display: block;
+              }
+
+              .placeholder {
+                color: $dimmed-text-color;
+                $side-padding: 0.15em;
+                padding-left: $side-padding;
+                padding-right: 0;
+
+              }
+
+              .name, .label, .score {
+                position: relative;
+                display: block;
+                bottom: 0.25em;
+                font-weight: bold;
+                vertical-align: bottom;
+              }
+
+              .name, .label {
+                flex-grow: 4;
+              }
+
+              //.score {
+              //  position: absolute;
+              //  top: 0;
+              //  right: 0;
+              //}
+            }
           }
         }
-        input[type=text] {
-          width: 3em;
-          text-align: right;
-          margin: 0 0.25em 0 0;
-        }
-        button {
-          background-color: transparent;
-          padding:0.5em;
-          .icon {
-            font-size: 2em;
-          }
-          &.play .icon {
-            @extend %fa-icon;
-            @extend .fas;
-            &:before {
-              content: fa-content($fa-var-play);
+
+        .game-controls {
+          @include make-col-ready();
+          @include make-col(3, $info-column-subcolumns);
+
+          & > .control-group {
+            display: grid;
+            border: $component-border;
+            padding: 0.5em;
+            margin-bottom: 1em;
+
+            .control-group {
+              white-space: nowrap;
+              &[disabled] * {
+                color: gainsboro;
+              }
+            }
+
+            .btn {
+              //align-self: flex-end;
+              //flex-basis:100%;
+              font-weight: bold;
             }
           }
-          &.pause .icon {
-            @extend %fa-icon;
-            @extend .fas;
-            &:before {
-              content: fa-content($fa-var-pause);
+
+          input[type=text] {
+            width: 3em;
+            text-align: right;
+            margin: 0 0.25em 0 0;
+          }
+
+          .transport {
+            display: flex;
+            justify-content: center;
+            border: none;
+
+            button {
+              //padding: 0.5em;
+
+              .icon {
+                font-size: 2em;
+              }
+
+              &.play .icon {
+                @extend %fa-icon;
+                @extend .fas;
+
+                &:before {
+                  content: fa-content($fa-var-play);
+                }
+              }
+
+              &.pause .icon {
+                @extend %fa-icon;
+                @extend .fas;
+
+                &:before {
+                  content: fa-content($fa-var-pause);
+                }
+              }
+
+              &.stop .icon {
+                @extend %fa-icon;
+                @extend .fas;
+
+                &:before {
+                  content: fa-content($fa-var-stop);
+                }
+              }
+
+              .label {
+                display: none;
+              }
+
+              &[disabled] {
+                opacity: $btn-disabled-opacity;
+              }
             }
           }
-          &.stop .icon {
-            @extend %fa-icon;
-            @extend .fas;
-            &:before {
-              content: fa-content($fa-var-stop);
-            }
+
+          .status {
+            display: block;
+            text-align: center;
           }
-          .label {
-            display: none;
-          }
-          &[disabled] {
-            opacity: $btn-disabled-opacity;
-          }
+
         }
       }
+
+      .game-controls, .score-board {
+        h3 {
+          margin: 0;
+          background-color: map-get($theme-colors, 'primary');
+          color: white;
+          font-size: 1.25rem;
+          padding: 0.25em 1.5em;
+        }
+      }
+
       .system-status {
+        @include make-col-ready();
+        @include make-col(12);
+
+        h3 {
+          display: none;
+        }
+
         .player-list {
-          display: inline;
-          list-style-type: none;
-          padding-left: 0;
-          .player {
-            display: inline-block;
-            position: relative;
-            padding: 1rem;
-            border: $item-border;
-            box-shadow: $box-shadow-sm;
-            margin-right: 0.25em;
-            .fa {
-              margin-right: 1rem;
-              font-size: 2em;
-            }
-            .placeholder {
-              color: $dimmed-text-color;
-              $side-padding: 0.15em;
-              padding-left: $side-padding;
-              padding-right: 0;
-            }
-            .name {
-              position: relative;
-              bottom: 0.25em;
-              font-weight: bold;
+          & * {
+            display: inline;
+          }
+
+          ul {
+            list-style-type: none;
+            padding-left: 0;
+
+            li {
+              padding-left: 0.5em;
+              padding-right: 0.5em;
             }
           }
         }
       }
     }
+
     .content.sidebar {
       @if $show-sidebar == true {
         @include make-col-ready();
@@ -235,11 +397,13 @@ blockquote {
       }
     }
   }
+
   .demos {
     &.d3 {
       svg {
         border: solid 1px gainsboro;
         margin: 25px;
+
         &.grid-demo {
           .grid {
             path.grid-lines {

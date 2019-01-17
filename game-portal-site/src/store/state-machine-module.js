@@ -32,9 +32,21 @@ export default {
       colors: ['red', 'orange', 'green', 'blue', 'indigo', 'violet', 'rebeccapurple']
     },
     layout: {},
-    playerAttributes: {}
+    playerAttributes: {},
+    playerData: {}
   },
-  getters: {},
+  getters: {
+    players(state) {
+      return Object.entries(state.playerData).reduce((playerList, entry) => {
+        const player = {id: entry[0], username: entry[1].rawData.username, score: entry[1].score};
+        if(state.playerAttributes.hasOwnProperty(player.id)) {
+          Object.assign(player, state.playerAttributes[player.id]);
+        }
+        playerList.push(player);
+        return playerList;
+      }, []);
+    }
+  },
   mutations: {
     newGameRowsChanged: function (state, newValue) {
       state.newGameRows = newValue;
@@ -59,11 +71,13 @@ export default {
         console.log(`no game data`);
         state.gameStatus = 'unknown';
         state.layout = [];
+        state.playerData = {};
       } else {
         state.gameStatus = gameData.status;
         state.boardGrid.rows = parseInt(gameData.parameters.boardGrid.rows);
         state.boardGrid.columns = parseInt(gameData.parameters.boardGrid.columns);
         state.layout = gameData.layout;
+        state.playerData = gameData.playerData;
       }
     },
     newPlayerAttributesReceived: function (state, playerAttributes) {
@@ -140,7 +154,7 @@ export default {
           iconName: shuffledIcons[i],
           color: state.stylingOptions.colors[i]
         };
-      })
+      });
       commit('newPlayerAttributesReceived', playerAttributes);
     },
     stopGame({commit}, playerList) {
