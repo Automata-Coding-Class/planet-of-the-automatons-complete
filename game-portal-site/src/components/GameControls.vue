@@ -54,6 +54,12 @@
       }
     },
     computed: {
+      availableRulesEngines: function() {
+        const engines = this.$store.state.rules.availableRulesEngines;
+        return engines.map(eng => {
+          return eng.name || eng.ip;
+        })
+      },
       newGameRows: {
         get: function () {
           return this.$store.state.stateMachine.newGameRows;
@@ -148,7 +154,7 @@
         return this.gameTime.elapsed < this.gameTime.limit;
       },
       ...mapState('stateMachine', ['gameStatus', 'gameTime']),
-      ...mapState('rules', ['availableRulesEngines'])
+      // ...mapState('rules', ['availableRulesEngines'])
     },
     methods: {
       newGame() {
