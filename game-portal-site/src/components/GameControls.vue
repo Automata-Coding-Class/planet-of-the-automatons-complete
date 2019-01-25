@@ -1,6 +1,13 @@
 <template>
     <div class="component game-controls">
         <h3>Game Setup</h3>
+        <span class="control-group engine-selector">
+            <label for="gameEngineSelect">Engine</label>
+            <button class="refresh" @click="refreshGameEngineList">
+                <span class="icon"></span><span class="label">refresh</span>
+            </button>
+                <b-form-select id="gameEngineSelect" v-model="selectedGameEngine" :options="availableRulesEngines" class="mb-3" />
+        </span>
         <form class="control-group">
             <fieldset class="control-group" :disabled="newGameButtonDisabled">
                 <span class="control-group"><input type="text" id="newGameColumnsInput"
@@ -42,7 +49,9 @@
   export default {
     name: "GameControls",
     data: function () {
-      return {}
+      return {
+        selectedGameEngine: ''
+      }
     },
     computed: {
       newGameRows: {
@@ -138,7 +147,8 @@
       gameTimerRunning: function () {
         return this.gameTime.elapsed < this.gameTime.limit;
       },
-      ...mapState('stateMachine', ['gameStatus', 'gameTime'])
+      ...mapState('stateMachine', ['gameStatus', 'gameTime']),
+      ...mapState('rules', ['availableRulesEngines'])
     },
     methods: {
       newGame() {
@@ -162,6 +172,9 @@
       },
       stopButtonAction() {
         this.$store.dispatch('stateMachine/stopGame');
+      },
+      refreshGameEngineList() {
+        this.$store.dispatch('rules/refreshRulesEngineList');
       }
     }
   }

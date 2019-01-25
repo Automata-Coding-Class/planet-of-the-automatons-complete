@@ -309,6 +309,35 @@ blockquote {
             margin: 0 0.25em 0 0;
           }
 
+          .engine-selector {
+            display: flex;
+            flex-flow: row wrap;
+            align-items: baseline;
+            button {
+              border: none;
+              .label {
+                display:none;
+              }
+              .icon {
+                font-size: 1em;
+                @extend %fa-icon;
+                @extend .fas;
+              }
+              &.refresh {
+                .icon {
+                  &:before {
+                    content: fa-content($fa-var-sync-alt);
+                    color: $primary;
+                  }
+                }
+              }
+            }
+            select {
+              flex-basis: 100%;
+              align-self: flex-end;
+            }
+          }
+
           .transport {
             display: flex;
             justify-content: center;

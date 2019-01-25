@@ -29,3 +29,7 @@ npm run lint
 ```
 npm run test:unit
 ```
+
+## Useful Links
+
+- [Colour Scheme Designer](http://www.colorschemedesigner.com/csd-3.5/)

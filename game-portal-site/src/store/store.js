@@ -4,6 +4,7 @@ import createPersistedState from 'vuex-persistedstate';
 import AuthenticationModule from './authentication-module';
 import StateMachineModule from './state-machine-module';
 import GameEventModule from './game-event-module';
+import RulesModule from './rules-module';
 
 Vue.use(Vuex);
 
@@ -14,7 +15,8 @@ export default new Vuex.Store({
   modules: {
     authentication: AuthenticationModule,
     stateMachine: StateMachineModule,
-    gameEvents: GameEventModule
+    gameEvents: GameEventModule,
+    rules: RulesModule
   },
   plugins: [createPersistedState()]
 });

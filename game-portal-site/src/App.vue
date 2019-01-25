@@ -18,6 +18,7 @@
       if(this.$store.state.authentication.authToken !== undefined) {
         this.$store.dispatch('stateMachine/connect', this.$store.state.authentication.authToken);
         this.$store.dispatch('gameEvents/connect', this.$store.state.authentication.authToken);
+        this.$store.dispatch('rules/connect', this.$store.state.authentication.authToken);
       }
     }
   }

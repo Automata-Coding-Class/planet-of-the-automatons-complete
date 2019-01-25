@@ -3,6 +3,7 @@ const createNewGame = require('./state/game').createNewGame;
 const createGameOptions = require('./state/game-options');
 const EventServer = require('./sockets/event-server');
 const StateServer = require('./sockets/state-server');
+const RulesServer = require('./sockets/rules-server');
 
 const GameEngine = {};
 const frameDelay = 125;
@@ -51,6 +52,8 @@ function connect(httpServer) {
   eventServer.connect();
   const stateServer = new StateServer(gameServer);
   stateServer.connect();
+  const rulesServer = new RulesServer(gameServer);
+  rulesServer.connect();
 
   stateServer.on('newGameRequested', options => {
     // TODO: replace this with code that's responsive to the request
