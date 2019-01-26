@@ -1,11 +1,35 @@
 const SocketServerCore = require('./socket-server-core');
+const http = require('http');
 const NetScan = require('netscan');
 const scanner = new NetScan();
 const network = require('network');
+const io = require('socket.io');
 
 const rulesNamespaceIdentifier = 'rules';
 const ipScanRangeSize = process.env.IP_SCAN_RANGE_SIZE !== undefined ? process.env.IP_SCAN_RANGE_SIZE : 100;
 const ipPattern = /^(\d+)\.(\d+)\.(\d+)\.(\d+)/;
+
+function getRulesEnginePort() {
+    const rawPortValue = process.env.RULES_ENGINE_PORT || '5000';
+    const port = parseInt(rawPortValue, 10);
+    if (isNaN(port)) { // named pipe
+      return rawPortValue;
+    }
+    if (port >= 0) { // port number
+      return port;
+    }
+    return false;
+}
+
+function instantiateSocketServer() {
+// Send index.html to all requests
+  const server = http.createServer(function(req, res) {
+    res.json({status: 'running'});
+  });
+  const port = getRulesEnginePort();
+  server.listen(port);
+  return require('socket.io').listen(server);
+}
 
 function getStartingIpAddress() {
   // first figure out the current machine's IP address, and gateway if possible
@@ -71,8 +95,11 @@ function getEngineList() {
 }
 
 class RulesServer extends SocketServerCore {
-  constructor(socketServer) {
-    super(socketServer);
+
+  constructor() {
+    const _socketServer = instantiateSocketServer();
+    super(_socketServer);
+    this.getSocketServer = function() { return _socketServer };
     this.namespaceIdentifier = rulesNamespaceIdentifier; // used by SocketServerCore
   }
 
