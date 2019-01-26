@@ -1,5 +1,5 @@
 const SocketServerCore = require('./socket-server-core');
-const sanitizeToken = require('../../authentication').sanitizeToken;
+const sanitizeToken = require('../authentication').sanitizeToken;
 const uuid = require('uuid/v1');
 
 const eventNamespaceIdentifier = 'event';

@@ -57,7 +57,7 @@
       availableRulesEngines: function() {
         const engines = this.$store.state.stateMachine.availableRulesEngines;
         return engines.map(eng => {
-          return eng.name || eng.ip;
+          return eng.name || `${eng.ip}:${eng.port}`;
         })
       },
       newGameRows: {

@@ -1,6 +1,6 @@
-const logger = require('../logger');
-const createNewGame = require('./state/game').createNewGame;
-const createGameOptions = require('./state/game-options');
+const logger = require('./logger');
+const createNewGame = require('./game/state/game').createNewGame;
+const createGameOptions = require('./game/state/game-options');
 const EventServer = require('./sockets/event-server');
 const StateServer = require('./sockets/state-server');
 const RulesServer = require('./sockets/rules-server');
@@ -54,6 +54,7 @@ function connect(httpServer) {
   stateServer.connect();
   const rulesServer = new RulesServer(gameServer);
   rulesServer.connect();
+  rulesServer.getSocketServer();
 
   stateServer.on('availableRulesEnginesRequested', () => {
     rulesServer.getAvailableRulesEngines()

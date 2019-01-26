@@ -90,6 +90,10 @@ function getEngineList() {
           */
         });
 
+      }).then(engineList => {
+        return engineList.map(engine => {
+          return {ip: engine.ip, port: engine.port, name: engine.body}
+        });
       });
     })
 }
@@ -110,10 +114,6 @@ class RulesServer extends SocketServerCore {
       console.log(`hostname:`, os.hostname());
       getEngineList()
         .then(rulesEnginesList => {
-          rulesEnginesList = rulesEnginesList.map(engine => {
-            return {ip: engine.ip, name: engine.body}
-          });
-          console.log(`rulesEnginesList`, rulesEnginesList);
           fn({engines: rulesEnginesList });
         });
     })
@@ -122,9 +122,6 @@ class RulesServer extends SocketServerCore {
   getAvailableRulesEngines() {
     return getEngineList()
       .then(rulesEnginesList => {
-        rulesEnginesList = rulesEnginesList.map(engine => {
-          return {ip: engine.ip, name: engine.body}
-        });
         console.log(`rulesEnginesList`, rulesEnginesList);
         return {engines: rulesEnginesList };
       });
