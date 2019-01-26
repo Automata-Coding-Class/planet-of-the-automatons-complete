@@ -9,6 +9,10 @@ class StateServer extends SocketServerCore {
   }
 
   addSocketEvents(socket) {
+    socket.on('rulesEngineListRequest', (fn) => {
+      this.emit('availableRulesEnginesRequested');
+    });
+
     socket.on('newGameRequest', (options) => {
       this.log(`newGameRequest: %o`, options);
       this.emit('newGameRequested', {rows: options.rows, columns: options.columns, duration: options.duration})
@@ -60,6 +64,10 @@ class StateServer extends SocketServerCore {
 
   newGameHandler(gameData) {
     this.namespace.emit('newGameCreated', gameData);
+  }
+
+  broadcastAvailableRulesEnginesList(engines) {
+    this.namespace.emit('availableRulesEnginesUpdated', engines);
   }
 
   broadcastGameState(gameData) {

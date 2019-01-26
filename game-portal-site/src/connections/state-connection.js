@@ -13,13 +13,25 @@ export function createStateConnection() {
   };
 
   const addSocketEvents = (socket) => {
+    socket.on('availableRulesEnginesUpdated', response => {
+      coreConnection.dispatchEvent('availableRulesEnginesUpdated', response.engines);
+    });
     socket.on('newGameCreated', gameParameters => {
       coreConnection.dispatchEvent('newGameCreated', gameParameters);
     });
     socket.on('gameStateUpdated', updatedGameState => {
       coreConnection.dispatchEvent('gameStateUpdated', updatedGameState);
     });
-  }
+  };
+
+  const requestAvailableRulesEngines = () => {
+    return new Promise((resolve) => {
+      console.log(`inside the get rules engines promise`);
+      socket.emit('rulesEngineListRequest', function (response) {
+        resolve(response.engines);
+      });
+    });
+  };
 
   const getGameParameters = () => {
     return new Promise((resolve) => {
@@ -66,6 +78,7 @@ export function createStateConnection() {
     createConnection: createConnection,
     disconnect: coreConnection.disconnect,
     ping: coreConnection.ping,
+    requestAvailableRulesEngines: requestAvailableRulesEngines,
     getGameParameters: getGameParameters,
     requestNewGame: requestNewGame,
     startGame: startGame,

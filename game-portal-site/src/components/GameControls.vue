@@ -55,7 +55,7 @@
     },
     computed: {
       availableRulesEngines: function() {
-        const engines = this.$store.state.rules.availableRulesEngines;
+        const engines = this.$store.state.stateMachine.availableRulesEngines;
         return engines.map(eng => {
           return eng.name || eng.ip;
         })
@@ -180,7 +180,7 @@
         this.$store.dispatch('stateMachine/stopGame');
       },
       refreshGameEngineList() {
-        this.$store.dispatch('rules/refreshRulesEngineList');
+        this.$store.dispatch('stateMachine/refreshRulesEngineList');
       }
     }
   }

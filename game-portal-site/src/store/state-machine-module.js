@@ -19,6 +19,7 @@ function shuffleArray(array) {
 export default {
   namespaced: true,
   state: {
+    availableRulesEngines: [],
     gameStatus: 'unknown',
     gameTime: {
       limit: 0,
@@ -75,6 +76,10 @@ export default {
     setGameStatus: function (state, status) {
       state.gameStatus = status;
     },
+    rulesEngineListReceived(state, rulesEngineList) {
+      console.log(`updating Rules Engine list:`, rulesEngineList);
+      state.availableRulesEngines = rulesEngineList;
+    },
     gameDataUpdated: function (state, gameData) {
       console.log(`will update the game data state:`, gameData);
       if (!gameData) {
@@ -108,6 +113,9 @@ export default {
     connect({commit, dispatch, state}, authToken) {
       stateConnection.createConnection(authToken)
         .then(() => {
+          dispatch('refreshRulesEngineList');
+        })
+        .then(() => {
           console.log(`connected to the stateMachine server`);
           return stateConnection.getGameData();
         })
@@ -115,6 +123,9 @@ export default {
           console.log(`StateMachineModule - gameData:`, gameData);
           commit('gameDataUpdated', gameData);
         });
+      stateConnection.on('availableRulesEnginesUpdated', function rulesEnginesListHandler(engines) {
+        commit('rulesEngineListReceived', engines);
+      });
       stateConnection.on('newGameCreated', function newGameHandler(newGameResponse) {
         console.log(`new game response`, newGameResponse);
         commit('gameDataUpdated', newGameResponse);
@@ -128,6 +139,9 @@ export default {
     },
     disconnect() {
       stateConnection.disconnect();
+    },
+    refreshRulesEngineList({}) {
+      stateConnection.requestAvailableRulesEngines();
     },
     getGameParameters() {
       stateConnection.getGameParameters();

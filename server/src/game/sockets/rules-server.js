@@ -91,6 +91,17 @@ class RulesServer extends SocketServerCore {
         });
     })
   }
+
+  getAvailableRulesEngines() {
+    return getEngineList()
+      .then(rulesEnginesList => {
+        rulesEnginesList = rulesEnginesList.map(engine => {
+          return {ip: engine.ip, name: engine.body}
+        });
+        console.log(`rulesEnginesList`, rulesEnginesList);
+        return {engines: rulesEnginesList };
+      });
+  }
 }
 
 module.exports = RulesServer;

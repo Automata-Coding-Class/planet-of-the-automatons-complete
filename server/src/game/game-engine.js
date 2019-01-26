@@ -55,6 +55,12 @@ function connect(httpServer) {
   const rulesServer = new RulesServer(gameServer);
   rulesServer.connect();
 
+  stateServer.on('availableRulesEnginesRequested', () => {
+    rulesServer.getAvailableRulesEngines()
+      .then(engines => {
+        stateServer.broadcastAvailableRulesEnginesList(engines);
+      });
+  });
   stateServer.on('newGameRequested', options => {
     // TODO: replace this with code that's responsive to the request
     const gameOptions = createGameOptions(options)
