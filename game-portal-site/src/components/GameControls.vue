@@ -6,8 +6,9 @@
             <button class="refresh" @click="refreshGameEngineList">
                 <span class="icon"></span><span class="label">refresh</span>
             </button>
-                <b-form-select id="gameEngineSelect" v-model="selectedGameEngine" :options="availableRulesEngines" class="mb-3" />
+                <b-form-select id="gameEngineSelect" v-model="selectedRulesEngine" :options="availableRulesEngines" class="mb-3" />
         </span>
+        <p>rules: {{selectedRulesEngine}}</p>
         <form class="control-group">
             <fieldset class="control-group" :disabled="newGameButtonDisabled">
                 <span class="control-group"><input type="text" id="newGameColumnsInput"
@@ -48,17 +49,24 @@
 
   export default {
     name: "GameControls",
-    data: function () {
-      return {
-        selectedGameEngine: ''
-      }
+    data: function() {
+      return {};
     },
     computed: {
       availableRulesEngines: function() {
         const engines = this.$store.state.stateMachine.availableRulesEngines;
         return engines.map(eng => {
-          return eng.name || `${eng.ip}:${eng.port}`;
+          return { value: `${eng.ip}:${eng.port}`, text: eng.name || `${eng.ip}:${eng.port}` };
         })
+      },
+      selectedRulesEngine: {
+        get: function() {
+          const engine = this.$store.state.stateMachine.selectedRulesEngine;
+          return `${engine.ip}:${engine.port}`;
+        },
+        set: function(newValue) {
+          this.$store.commit('stateMachine/rulesEngineSelected', newValue)
+        }
       },
       newGameRows: {
         get: function () {

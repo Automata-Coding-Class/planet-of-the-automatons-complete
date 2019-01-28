@@ -1,4 +1,4 @@
-const SocketServerCore = require('./socket-server-core');
+const EventEmitter = require('events');
 const http = require('http');
 const NetScan = require('netscan');
 const scanner = new NetScan();
@@ -21,16 +21,6 @@ function getRulesEnginePort() {
     return false;
 }
 
-function instantiateSocketServer() {
-// Send index.html to all requests
-  const server = http.createServer(function(req, res) {
-    res.json({status: 'running'});
-  });
-  const port = getRulesEnginePort();
-  server.listen(port);
-  return require('socket.io').listen(server);
-}
-
 function getStartingIpAddress() {
   // first figure out the current machine's IP address, and gateway if possible
   return new Promise((resolve, reject) => {
@@ -51,18 +41,31 @@ function getStartingIpAddress() {
   });
 }
 
+function getLocalIp() {
+  return new Promise((resolve, reject) => {
+    network.get_active_interface((err, netInterface) => {
+      if (err) {
+        throw err;
+      } else {
+        resolve(netInterface.ip_address);
+      }
+    })
+  });
+}
+
 function getEngineList() {
+  console.log(`inside getEngineList`);
   return getStartingIpAddress()
     .then(startingIp => {
       const scannerOptions = {
         protocol : ['http'],
-        ports: [3000], //[80, 90, 443, 1337],
+        ports: [getRulesEnginePort()], //[80, 90, 443, 1337],
         codes: [200, 201, 202], //only count it if a 200 comes back,
         errors : [], //like 'ETIMEDOUT'
         paths: '/api/helloworld' || [string], // optional to have it hit a specific endpoint
         headers: {}, // include the following headers in all request so you can do auth or something,
         timeout: 500, //10000, //10 seconds timeout)
-        ignoreResponse : true //tells it to not return the body as part of the results
+        ignoreResponse : false //tells it to not return the body as part of the results
 
 
       };
@@ -91,19 +94,26 @@ function getEngineList() {
         });
 
       }).then(engineList => {
-        return engineList.map(engine => {
-          return {ip: engine.ip, port: engine.port, name: engine.body}
+        return getLocalIp()
+          .then(localIp => {
+            return {localIp: localIp, engines: engineList};
+          })
+
+      })
+        .then(networkAddressData => {
+        return networkAddressData.engines.map(engine => {
+          console.log(`ENGINE BODY:`, engine.body);
+          const body = typeof engine.body === 'object' ? engine.body : JSON.parse(engine.body);
+          return {ip: engine.ip, port: engine.port, name: body.name, isLocal: engine.ip === networkAddressData.localIp}
         });
       });
     })
 }
 
-class RulesServer extends SocketServerCore {
+class RulesClient extends EventEmitter {
 
   constructor() {
-    const _socketServer = instantiateSocketServer();
-    super(_socketServer);
-    this.getSocketServer = function() { return _socketServer };
+    super();
     this.namespaceIdentifier = rulesNamespaceIdentifier; // used by SocketServerCore
   }
 
@@ -128,4 +138,4 @@ class RulesServer extends SocketServerCore {
   }
 }
 
-module.exports = RulesServer;
+module.exports = RulesClient;

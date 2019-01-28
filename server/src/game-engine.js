@@ -3,7 +3,8 @@ const createNewGame = require('./game/state/game').createNewGame;
 const createGameOptions = require('./game/state/game-options');
 const EventServer = require('./sockets/event-server');
 const StateServer = require('./sockets/state-server');
-const RulesServer = require('./sockets/rules-server');
+const RulesClient = require('./sockets/clients/rules-client');
+const RulesEngine = require('./game/rules-engine');
 
 const GameEngine = {};
 const frameDelay = 125;
@@ -52,12 +53,10 @@ function connect(httpServer) {
   eventServer.connect();
   const stateServer = new StateServer(gameServer);
   stateServer.connect();
-  const rulesServer = new RulesServer(gameServer);
-  rulesServer.connect();
-  rulesServer.getSocketServer();
+  const rulesClient = new RulesClient();
 
   stateServer.on('availableRulesEnginesRequested', () => {
-    rulesServer.getAvailableRulesEngines()
+    rulesClient.getAvailableRulesEngines()
       .then(engines => {
         stateServer.broadcastAvailableRulesEnginesList(engines);
       });
@@ -140,6 +139,9 @@ function connect(httpServer) {
       logger.info('GameEngine - client disconnected: %o', socket.decodedToken);
     });
   });
+
+  // instantiate the local, default rules engine
+  const defaultRulesEngine = new RulesEngine();
 
   return gameServer;
 }

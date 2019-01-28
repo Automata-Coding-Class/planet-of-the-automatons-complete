@@ -20,6 +20,7 @@ export default {
   namespaced: true,
   state: {
     availableRulesEngines: [],
+    selectedRulesEngine: undefined,
     gameStatus: 'unknown',
     gameTime: {
       limit: 0,
@@ -47,7 +48,7 @@ export default {
     players(state) {
       return Object.entries(state.playerData).reduce((playerList, entry) => {
         const player = {id: entry[0], username: entry[1].rawData.username, score: entry[1].score};
-        if(state.playerAttributes.hasOwnProperty(player.id)) {
+        if (state.playerAttributes.hasOwnProperty(player.id)) {
           Object.assign(player, state.playerAttributes[player.id]);
         }
         playerList.push(player);
@@ -79,6 +80,27 @@ export default {
     rulesEngineListReceived(state, rulesEngineList) {
       console.log(`updating Rules Engine list:`, rulesEngineList);
       state.availableRulesEngines = rulesEngineList;
+      if (state.selectedRulesEngine === undefined && state.availableRulesEngines !== undefined) {
+        for (let i = 0; i < state.availableRulesEngines.length; i++) {
+          if (state.availableRulesEngines[i].isLocal) {
+            state.selectedRulesEngine = state.availableRulesEngines[i];
+            break;
+          }
+        }
+      }
+    },
+    rulesEngineSelected(state, engineAddress) {
+      const match = /^([\d.]+):(\d+)$/.exec(engineAddress);
+      if (match) {
+        const ip = match[1], port = match[2];
+        for (let i = 0; i < state.availableRulesEngines.length; i++) {
+          const engine = state.availableRulesEngines[i];
+          if(ip === engine.ip.toString() && port === engine.port.toString()) {
+            state.selectedRulesEngine = engine;
+            break;
+          }
+        }
+      }
     },
     gameDataUpdated: function (state, gameData) {
       console.log(`will update the game data state:`, gameData);
