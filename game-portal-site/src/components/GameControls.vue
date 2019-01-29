@@ -169,7 +169,8 @@
         this.$store.dispatch('stateMachine/requestNewGame', {
           rows: this.newGameRows,
           columns: this.newGameColumns,
-          duration: this.newGameDuration
+          duration: this.newGameDuration,
+          engine: this.selectedRulesEngine
         })
       },
       playButtonAction() {

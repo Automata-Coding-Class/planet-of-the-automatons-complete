@@ -1,24 +1,25 @@
 const EventEmitter = require('events');
-const http = require('http');
 const NetScan = require('netscan');
 const scanner = new NetScan();
 const network = require('network');
-const io = require('socket.io');
+const uuid = require('uuid/v1');
+
+const GameProxy = require('./sockets/clients/game-proxy');
 
 const rulesNamespaceIdentifier = 'rules';
 const ipScanRangeSize = process.env.IP_SCAN_RANGE_SIZE !== undefined ? process.env.IP_SCAN_RANGE_SIZE : 100;
 const ipPattern = /^(\d+)\.(\d+)\.(\d+)\.(\d+)/;
 
 function getRulesEnginePort() {
-    const rawPortValue = process.env.RULES_ENGINE_PORT || '5000';
-    const port = parseInt(rawPortValue, 10);
-    if (isNaN(port)) { // named pipe
-      return rawPortValue;
-    }
-    if (port >= 0) { // port number
-      return port;
-    }
-    return false;
+  const rawPortValue = process.env.RULES_ENGINE_PORT || '5000';
+  const port = parseInt(rawPortValue, 10);
+  if (isNaN(port)) { // named pipe
+    return rawPortValue;
+  }
+  if (port >= 0) { // port number
+    return port;
+  }
+  return false;
 }
 
 function getStartingIpAddress() {
@@ -28,7 +29,6 @@ function getStartingIpAddress() {
       if (err) {
         throw err;
       } else {
-        console.log(`netInterface:`, netInterface);
         if (netInterface.gateway_ip !== undefined) {
           const match = ipPattern.exec(netInterface.gateway_ip);
           resolve(`${match[1]}.${match[2]}.${match[3]}.${(parseInt(match[4]) + 1)}`);
@@ -101,16 +101,16 @@ function getEngineList() {
 
       })
         .then(networkAddressData => {
-        return networkAddressData.engines.map(engine => {
-          console.log(`ENGINE BODY:`, engine.body);
-          const body = typeof engine.body === 'object' ? engine.body : JSON.parse(engine.body);
-          return {ip: engine.ip, port: engine.port, name: body.name, isLocal: engine.ip === networkAddressData.localIp}
+          return networkAddressData.engines.map(engine => {
+            console.log(`ENGINE BODY:`, engine.body);
+            const body = typeof engine.body === 'object' ? engine.body : JSON.parse(engine.body);
+            return {ip: engine.ip, port: engine.port, name: body.name, isLocal: engine.ip === networkAddressData.localIp}
+          });
         });
-      });
     })
 }
 
-class RulesClient extends EventEmitter {
+class GameFactory extends EventEmitter {
 
   constructor() {
     super();
@@ -136,6 +136,17 @@ class RulesClient extends EventEmitter {
         return {engines: rulesEnginesList };
       });
   }
+
+  createNewGame(options) {
+    // this is a little weird, I know, but game-engine needs this function to
+    // return a Promise, and constructors can't be asynchronous (or return a
+    // Promise instead of the instantiated class)
+    const gameProxy = new GameProxy(options);
+    return gameProxy.connect()
+      .then(() => {
+        return gameProxy;
+      })
+  }
 }
 
-module.exports = RulesClient;
+module.exports = GameFactory;

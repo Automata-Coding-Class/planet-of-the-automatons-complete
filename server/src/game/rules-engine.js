@@ -1,4 +1,3 @@
-const SocketServerCore = require('../sockets/socket-server-core');
 const http = require('http');
 const io = require('socket.io');
 const namespaceIdentifier = '/rules';
@@ -16,8 +15,7 @@ function getRulesEnginePort() {
   return false;
 }
 
-
-function instantiateSocketServer() {
+function instantiateHttpServer() {
   const server = http.createServer(function (req, res) {
     // res.json({status: 'running'});
     res.writeHead(200, {'Content-Type': 'application/JSON'});
@@ -25,31 +23,22 @@ function instantiateSocketServer() {
   });
   const port = getRulesEnginePort();
   server.listen(port);
-  return require('socket.io').listen(server);
+  return server;
 }
 
-class RulesEngine extends SocketServerCore {
+const createNewRulesEngine = function() {
+  const server = instantiateHttpServer();
+  const socket = io(server, {path: '/rules'});
+  const namespace = socket.of(namespaceIdentifier);
+  socket.on('connection', (client) => {
+    console.log(`RulesEngine: someone connected!`);
+    client.on('newGameRequested', options => {
+      console.log(`RulesEngine has received a new game request:`, options);
+    })
+  });
 
-  constructor() {
-    const _socketServer = instantiateSocketServer();
-    super(_socketServer);
-    this.getSocketServer = function () {
-      return _socketServer
-    };
-    this.namespaceIdentifier = namespaceIdentifier; // used by SocketServerCore
-  }
+  return {};
+};
 
-  addSocketEvents(socket) {
-  }
-
-}
-
-module.exports = RulesEngine;
-
-
-// const socketManager = createSocketManager(`http://${options.serverAddress}:${options.serverPort}`);
-// return socketManager.openAllConnections(/*data.token*/)
-//   .then(() => {
-//     return socketManager;
-//   })
+module.exports = createNewRulesEngine;
 

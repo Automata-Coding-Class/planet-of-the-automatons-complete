@@ -15,7 +15,7 @@ class StateServer extends SocketServerCore {
 
     socket.on('newGameRequest', (options) => {
       this.log(`newGameRequest: %o`, options);
-      this.emit('newGameRequested', {rows: options.rows, columns: options.columns, duration: options.duration})
+      this.emit('newGameRequested', {rows: options.rows, columns: options.columns, duration: options.duration, engine: options.engine})
     });
 
     socket.on('startGame', () => {

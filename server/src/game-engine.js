@@ -3,8 +3,8 @@ const createNewGame = require('./game/state/game').createNewGame;
 const createGameOptions = require('./game/state/game-options');
 const EventServer = require('./sockets/event-server');
 const StateServer = require('./sockets/state-server');
-const RulesClient = require('./sockets/clients/rules-client');
-const RulesEngine = require('./game/rules-engine');
+const GameFactory = require('./game-factory');
+const createNewRulesEngine = require('./game/rules-engine');
 
 const GameEngine = {};
 const frameDelay = 125;
@@ -53,10 +53,10 @@ function connect(httpServer) {
   eventServer.connect();
   const stateServer = new StateServer(gameServer);
   stateServer.connect();
-  const rulesClient = new RulesClient();
+  const gameFactory = new GameFactory();
 
   stateServer.on('availableRulesEnginesRequested', () => {
-    rulesClient.getAvailableRulesEngines()
+    gameFactory.getAvailableRulesEngines()
       .then(engines => {
         stateServer.broadcastAvailableRulesEnginesList(engines);
       });
@@ -66,15 +66,21 @@ function connect(httpServer) {
     const gameOptions = createGameOptions(options)
       .addPercentObstacles(0.2)
       .addPercentAssets(0.1);
-    const game = newGame(gameOptions);
-    game.on('gameOver', () => {
-      logger.info(`RECEIVED GAME OVER EVENT`);
-      finishGame();
-    });
+    gameFactory.createNewGame(gameOptions)
+      .then(gameProxy => {
+        console.log(gameProxy);
+        const game = newGame(gameOptions);
+        game.on('gameOver', () => {
+          logger.info(`RECEIVED GAME OVER EVENT`);
+          finishGame();
+        });
 
-    const gameData = game.getGameData();
-    eventServer.broadcastGameInitialization(gameData);
-    stateServer.newGameHandler(gameData);
+        const gameData = game.getGameData();
+        gameData.proxy = gameProxy;
+
+        eventServer.broadcastGameInitialization(gameData);
+        stateServer.newGameHandler(gameData);
+      });
   });
   stateServer.on('gameParamsRequest', request => {
     if (request.callback !== undefined) {
@@ -140,8 +146,8 @@ function connect(httpServer) {
     });
   });
 
-  // instantiate the local, default rules engine
-  const defaultRulesEngine = new RulesEngine();
+  // create the local, default rules engine
+  const defaultRulesEngine = createNewRulesEngine();
 
   return gameServer;
 }

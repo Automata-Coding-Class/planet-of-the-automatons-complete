@@ -80,7 +80,9 @@ const createNewGame = function createNewGame(options) {
     console.log(`\n${boardString}`);
   }
 
-  // for development use only; very useful when working on board layout code
+  // for development use only; very useful when working on board layout code, BUT...
+  // quite expensive in terms of processor time, floods the console, and makes game
+  // creation laggy. Only use when absolutely necessary.
   function printBlankCellsASCII(blankCells, highlightedCells) {
     const spacerWidth = 2;
     const spacer = ''.padStart(spacerWidth);
@@ -181,7 +183,7 @@ const createNewGame = function createNewGame(options) {
 
   // recursively defines which cells on the game board must remain empty of obstacles
   function addEmptyCell(fromCell, blankCells, maxEmptyCells, exhaustedCells = new Set()) {
-    printBlankCellsASCII(blankCells, [fromCell]);
+    // printBlankCellsASCII(blankCells, [fromCell]);
     if (blankCells.length === maxEmptyCells) return;
     const emptyCell = getRandomNeighbourCellIndex(fromCell, blankCells, true);
     if (emptyCell === undefined) {
