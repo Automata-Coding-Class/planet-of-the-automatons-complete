@@ -109,9 +109,19 @@ function connect(httpServer) {
       }
     }
   });
-  stateServer.on('gameDataRequested', callback => {
-    if (callback !== undefined) {
-      callback(currentGame !== undefined ? currentGame.getGameData() : undefined);
+  stateServer.on('gameDataRequested', request => {
+    logger.info(`gameParamsRequest event handler: %o:`, request);
+    const game = activeGames.get(request.gameId);
+    if (game !== undefined && request.callback !== undefined) {
+      game.getGameData()
+        .then(response => {
+          request.callback(response);
+        })
+    }
+    const oldCode = () => {
+      if (callback !== undefined) {
+        callback(currentGame !== undefined ? currentGame.getGameData() : undefined);
+      }
     }
   });
   stateServer.on('startGame', () => {

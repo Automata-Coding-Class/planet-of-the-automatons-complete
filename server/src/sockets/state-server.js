@@ -47,18 +47,11 @@ class StateServer extends SocketServerCore {
       }
     });
 
-    socket.on('gameStateRequest', (fn) => {
-      try {
-        fn(this.gameState.getCurrentState());
-      } catch (e) {
-        this.error(JSON.stringify(e));
-      }
-    });
-
-    socket.on('gameDataRequest', (fn) => {
-      this.emit(  'gameDataRequested', (gameData) => {
-        fn(gameData);
-      });
+    socket.on('gameDataRequest', (gameId, fn) => {
+      this.emit( 'gameDataRequested', {gameId, callback: fn});
+      // this.emit( 'gameDataRequested', (gameData) => {
+      //   fn(gameData);
+      // });
     })
   }
 

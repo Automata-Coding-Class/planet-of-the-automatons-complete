@@ -56,6 +56,12 @@ const createNewRulesEngine = function() {
         fn(game.getGameParameters());
       }
     });
+    client.on('gameDataRequest', (gameId, fn) => {
+      const game = activeGames.get(gameId);
+      if (game !== undefined && fn !== undefined) {
+        fn(game.getGameData());
+      }
+    });
   });
 
   return {};

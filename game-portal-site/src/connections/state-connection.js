@@ -75,8 +75,8 @@ export function createStateConnection() {
 
   const testRulesEngine = (gameId) => {
     console.log(`StateConnection - testRulesEngine. gameId=${gameId}`);
-    socket.emit('gameParamsRequest', gameId, response => {
-      console.log(`gameParamsResponse:`, response);
+    socket.emit('gameDataRequest', gameId, response => {
+      console.log(`game data response:`, response);
     });
   };
 

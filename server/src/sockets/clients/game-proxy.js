@@ -44,6 +44,10 @@ class GameProxy extends EventEmitter {
       return this.makePromiseBasedCall(socket, 'gameParamsRequest');
     };
 
+    this.getGameData = () => {
+      return this.makePromiseBasedCall(socket, 'gameDataRequest');
+    };
+
     this.connect = createConnection;
   }
 
