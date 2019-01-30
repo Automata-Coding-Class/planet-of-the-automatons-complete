@@ -115,6 +115,7 @@ class GameFactory extends EventEmitter {
   constructor() {
     super();
     this.namespaceIdentifier = rulesNamespaceIdentifier; // used by SocketServerCore
+    this.activeGames = new Map();
   }
 
   addSocketEvents(socket) {
@@ -137,14 +138,14 @@ class GameFactory extends EventEmitter {
       });
   }
 
-  createNewGame(options) {
+  static createNewGame(options) {
     // this is a little weird, I know, but game-engine needs this function to
     // return a Promise, and constructors can't be asynchronous (or return a
     // Promise instead of the instantiated class)
     const gameProxy = new GameProxy(options);
     return gameProxy.connect()
-      .then(() => {
-        return gameProxy;
+      .then(proxy => {
+        return proxy;
       })
   }
 }

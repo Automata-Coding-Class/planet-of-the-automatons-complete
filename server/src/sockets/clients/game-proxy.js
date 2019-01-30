@@ -6,33 +6,46 @@ const rulesNamespaceIdentifier = 'rules';
 
 class GameProxy extends EventEmitter {
 
-  constructor(options) {
-    super();
-    this.id = uuid();
-    this.namespaceIdentifier = rulesNamespaceIdentifier; // used by SocketServerCore
-
-    async function createConnection() {
-      const serverAddress = options.engine;
-      const socket = await SocketClient(`http://${serverAddress}`, {path: `/${rulesNamespaceIdentifier}`});
-      socket.on('connect', () => {
-        console.log(`GameProxy connected!`);
-        socket.emit('newGameRequested', Object.assign(options, {id: this.id}));
+  makePromiseBasedCall(socket, eventName) {
+    return new Promise(resolve => {
+      socket.emit(eventName, this.gameId, response => {
+        resolve(response);
       });
-    }
-    this.connect = createConnection;
+    });
   }
 
-  // addSocketEvents(socket) {
-  //   const dns = require('dns');
-  //   socket.on('rulesEngineListRequest', (fn) => {
-  //     const os = require('os');
-  //     console.log(`hostname:`, os.hostname());
-  //     getEngineList()
-  //       .then(rulesEnginesList => {
-  //         fn({engines: rulesEnginesList });
-  //       });
-  //   })
-  // }
+  constructor(options) {
+    super();
+    this.namespaceIdentifier = rulesNamespaceIdentifier; // used by SocketServerCore
+    this.initialGameData = undefined;
+    this.gameId = undefined;
+
+    const proxy = this;
+    let socket = undefined;
+
+    function createConnection() {
+      return new Promise((resolve, reject) => {
+        const serverAddress = options.engine;
+        socket = SocketClient(`http://${serverAddress}`, {path: `/${rulesNamespaceIdentifier}`})
+        socket.on('connect', () => {
+          console.log(`GameProxy connected!`);
+          socket.emit('newGameRequested', options, function (response) {
+            logger.info(`GameProxy - received new game object: %o`, response);
+            proxy.initialGameData = response.gameData;
+            proxy.gameId = response.gameData.id;
+            resolve(proxy);
+          });
+        });
+
+      });
+    }
+
+    this.getGameParameters = () => {
+      return this.makePromiseBasedCall(socket, 'gameParamsRequest');
+    };
+
+    this.connect = createConnection;
+  }
 
 }
 

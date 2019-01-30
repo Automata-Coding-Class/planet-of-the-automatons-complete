@@ -3,12 +3,13 @@
         <h3>Game Setup</h3>
         <span class="control-group engine-selector">
             <label for="gameEngineSelect">Engine</label>
-            <button class="refresh" @click="refreshGameEngineList">
+            <button class="refresh" @click="refreshRulesEngineList">
                 <span class="icon"></span><span class="label">refresh</span>
             </button>
                 <b-form-select id="gameEngineSelect" v-model="selectedRulesEngine" :options="availableRulesEngines" class="mb-3" />
+            <b-button @click="testRulesEngine">Test</b-button>
         </span>
-        <p>rules: {{selectedRulesEngine}}</p>
+        <p>rules engine address: {{selectedRulesEngine}}</p>
         <form class="control-group">
             <fieldset class="control-group" :disabled="newGameButtonDisabled">
                 <span class="control-group"><input type="text" id="newGameColumnsInput"
@@ -28,6 +29,7 @@
                       :disabled="newGameButtonDisabled">New Game
             </b-button>
         </form>
+        <p>Game ID: {{ gameId }}</p>
         <span class="control-group transport">
             <span><button class="stop" @click="stopButtonAction"
                           :disabled="stopButtonDisabled"><span class="icon"><span
@@ -46,6 +48,7 @@
 
 <script>
   import {mapState} from 'vuex';
+  import lzutf8 from 'lzutf8';
 
   export default {
     name: "GameControls",
@@ -161,6 +164,11 @@
       gameTimerRunning: function () {
         return this.gameTime.elapsed < this.gameTime.limit;
       },
+      gameId: function() {
+        const gameId = this.$store.state.stateMachine.gameId;
+        // console.log(`decompressed game id: ${lzutf8.decompress(gameId, {inputEncoding: 'Base64'})}`);
+        return gameId === undefined ? '' : gameId.substr(0,8);
+      },
       ...mapState('stateMachine', ['gameStatus', 'gameTime']),
       // ...mapState('rules', ['availableRulesEngines'])
     },
@@ -188,8 +196,11 @@
       stopButtonAction() {
         this.$store.dispatch('stateMachine/stopGame');
       },
-      refreshGameEngineList() {
+      refreshRulesEngineList() {
         this.$store.dispatch('stateMachine/refreshRulesEngineList');
+      },
+      testRulesEngine() {
+        this.$store.dispatch('stateMachine/testRulesEngine');
       }
     }
   }

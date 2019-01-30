@@ -1,7 +1,9 @@
+const logger = require('../logger');
 const http = require('http');
 const io = require('socket.io');
 const namespaceIdentifier = '/rules';
 const engineName = 'Internal Default';
+const createNewGame = require('./state/game').createNewGame;
 
 function getRulesEnginePort() {
   const rawPortValue = process.env.RULES_ENGINE_PORT || '5000';
@@ -26,15 +28,34 @@ function instantiateHttpServer() {
   return server;
 }
 
+function log(msg, ...args) {
+  logger.info(`RulesEngine - ` + msg, ...args);
+}
+
 const createNewRulesEngine = function() {
   const server = instantiateHttpServer();
   const socket = io(server, {path: '/rules'});
   const namespace = socket.of(namespaceIdentifier);
+  const activeGames = new Map();
+
+  function addNewGame(options) {
+    const newGame = createNewGame(options);
+    log(`game: %o`, newGame);
+    activeGames.set(newGame.id, newGame);
+    return newGame;
+  }
+
   socket.on('connection', (client) => {
-    console.log(`RulesEngine: someone connected!`);
-    client.on('newGameRequested', options => {
-      console.log(`RulesEngine has received a new game request:`, options);
-    })
+    client.on('newGameRequested', (options, ack) => {
+      const newGame = addNewGame(options);
+      ack({gameData: newGame.getGameData()});
+    });
+    client.on('gameParamsRequest', (gameId, fn) => {
+      const game = activeGames.get(gameId);
+      if (game !== undefined && fn !== undefined) {
+        fn(game.getGameParameters());
+      }
+    });
   });
 
   return {};

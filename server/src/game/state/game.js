@@ -1,5 +1,7 @@
 const logger = require('../../logger');
 const uuid = require('uuid/v1');
+const lzutf8 = require('lzutf8');
+const sha512 = require('js-sha512');
 const createGameStateMachine = require('./game-state-machine');
 const createGameTimer = require('./game-timer');
 
@@ -23,8 +25,6 @@ const positionDataFilters = {
 };
 
 const createNewGame = function createNewGame(options) {
-  const gameId = uuid();
-
   const numberOfRows = parseInt(options.rows);
   const numberOfColumns = parseInt(options.columns);
   const duration = parseInt(options.duration);
@@ -236,11 +236,11 @@ const createNewGame = function createNewGame(options) {
     statusManager.start();
     gameTimer.start()
       .then(() => {
-        logger.info(`initial timer promise fulfilled`);
-        endGame();
-      },
+          logger.info(`initial timer promise fulfilled`);
+          endGame();
+        },
         err => {
-        logger.info(`initial timer promise rejected`);
+          logger.info(`initial timer promise rejected`);
         });
     return getGameData();
   }
@@ -446,15 +446,53 @@ const createNewGame = function createNewGame(options) {
     }
   };
 
-  const dispatchEvent = async function(eventType, ...args) {
+  const dispatchEvent = async function (eventType, ...args) {
     if (eventListeners.has(eventType)) {
       eventListeners.get(eventType).map(handler => handler(...args));
     }
   };
 
+  function getCellStatesStringRepresentation(sparseArrayNotation = false) {
+    let stateString = '';
 
+    function convertToPadded32Bit(i) {
+      return i.toString(32).padStart(2, '0');
+    }
+
+    if (sparseArrayNotation) {
+      stateString += convertToPadded32Bit(numberOfColumns);
+      stateString += cellStates.reduce((cellStr, cell, i) => {
+        cellStr+= `${convertToPadded32Bit(i)}`;
+        cellStr+= cell.type.substr(0, 1).toUpperCase();
+        return cellStr;
+      },'')
+    } else {
+      for (let i = 0; i < cellStates.length; i++) {
+        stateString += cellStates[i] === undefined ? '_' :
+          cellStates[i].type.substr(0, 1).toUpperCase();
+      }
+    }
+    return stateString;
+  }
+
+  // tearing a page from Git's book, we're constructing a hash-like to use
+  // as the game's id so that we can (reasonably) reliably display a
+  // unique truncated form to the humans; however, since we don't need
+  // encryption, we can get that human-readable id PLUS the added benefit
+  // of being able to decompress it to reconstitute a game from it's id.
+  // That's not being used now, but once we start adding historical
+  // recording and game re-playability, I think it will come in quite handy
+  function generateGameId() {
+    const cellStatesString = getCellStatesStringRepresentation();
+    const seed = (new Date()).toISOString() + cellStatesString;
+    return sha512(lzutf8.compress(seed, {outputEncoding: 'StorageBinaryString'}));
+  }
+
+  const gameId = generateGameId();
+  console.log(`gameId is ${gameId.length} chars long`);
 
   return {
+    id: gameId,
     getNumberOfCells: getNumberOfCells,
     getGameParameters: getGameParameters,
     getCurrentState: getCurrentState,

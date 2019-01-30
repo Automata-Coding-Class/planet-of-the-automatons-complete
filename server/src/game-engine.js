@@ -12,6 +12,7 @@ const frameDelay = 125;
 let gameServer = null;
 const connectedUsers = new Map();
 let currentGame;
+const activeGames = new Map();
 
 const userJoinedHandler = function (socketInfo, userData) {
   connectedUsers.set(socketInfo.clientId, {user: userData, namespace: socketInfo.namespace});
@@ -66,25 +67,46 @@ function connect(httpServer) {
     const gameOptions = createGameOptions(options)
       .addPercentObstacles(0.2)
       .addPercentAssets(0.1);
-    gameFactory.createNewGame(gameOptions)
+    GameFactory.createNewGame(gameOptions)
       .then(gameProxy => {
         console.log(gameProxy);
-        const game = newGame(gameOptions);
-        game.on('gameOver', () => {
-          logger.info(`RECEIVED GAME OVER EVENT`);
-          finishGame();
-        });
+        activeGames.set(gameProxy.gameId, gameProxy);
+        eventServer.broadcastGameInitialization(gameProxy.initialGameData);
+        stateServer.newGameHandler(gameProxy.initialGameData);
 
-        const gameData = game.getGameData();
-        gameData.proxy = gameProxy;
+        // START: old code
+        const oldCode = () => {
+          const game = newGame(gameOptions);
+          game.on('gameOver', () => {
+            logger.info(`RECEIVED GAME OVER EVENT`);
+            finishGame();
+          });
 
-        eventServer.broadcastGameInitialization(gameData);
-        stateServer.newGameHandler(gameData);
+          const gameData = game.getGameData();
+
+          eventServer.broadcastGameInitialization(gameData);
+          stateServer.newGameHandler(gameData);
+        }
+        // END: old code
+
       });
   });
   stateServer.on('gameParamsRequest', request => {
-    if (request.callback !== undefined) {
-      request.callback(currentGame.getGameParameters());
+    logger.info(`gameParamsRequest event handler: %o:`, request);
+    const game = activeGames.get(request.gameId);
+    if (game !== undefined) {
+      logger.info(`retrieved active game: %o`, game);
+      game.getGameParameters()
+        .then(response => {
+          if (request.callback !== undefined) {
+            request.callback(response); //game.getGameParameters());
+          }
+        });
+    }
+    const oldCode = () => {
+      if (request.callback !== undefined) {
+        request.callback(currentGame.getGameParameters());
+      }
     }
   });
   stateServer.on('gameDataRequested', callback => {
@@ -117,7 +139,7 @@ function connect(httpServer) {
   });
 
   function advanceFrame(frameResponseData) {
-    if(currentGame.getCurrentStatus().name !== 'stopped') {
+    if (currentGame.getCurrentStatus().name !== 'stopped') {
       currentGame.nextFrame(frameResponseData)
         .then(gameData => {
           logger.info(`preparing to send updated game data: %o`, gameData);
@@ -136,8 +158,8 @@ function connect(httpServer) {
     advanceFrame();
   });
   eventServer.on('frameResponsesReceived', (frameResponseData) => {
-      logger.info(`GameEngine - frameResponseReceived: %o`, frameResponseData);
-      advanceFrame(frameResponseData);
+    logger.info(`GameEngine - frameResponseReceived: %o`, frameResponseData);
+    advanceFrame(frameResponseData);
   });
   gameServer.on('connection', function (socket) {
     logger.info(`GameServer - client connected: socket.id='%s', namespace='%s'`, socket.id, socket.nsp.name);

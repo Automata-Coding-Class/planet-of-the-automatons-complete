@@ -21,6 +21,7 @@ export default {
   state: {
     availableRulesEngines: [],
     selectedRulesEngine: undefined,
+    gameId: undefined,
     gameStatus: 'unknown',
     gameTime: {
       limit: 0,
@@ -106,6 +107,7 @@ export default {
       console.log(`will update the game data state:`, gameData);
       if (!gameData) {
         console.log(`no game data`);
+        state.gameId = undefined;
         state.gameStatus = 'unknown';
         state.layout = [];
         state.playerData = {};
@@ -114,6 +116,7 @@ export default {
         state.gameTime.elapsed = 0;
         state.boardGrid.totalAssets = 0;
       } else {
+        state.gameId = gameData.id;
         state.gameStatus = gameData.status;
         state.boardGrid.rows = parseInt(gameData.parameters.boardGrid.rows);
         state.boardGrid.columns = parseInt(gameData.parameters.boardGrid.columns);
@@ -164,6 +167,10 @@ export default {
     },
     refreshRulesEngineList({}) {
       stateConnection.requestAvailableRulesEngines();
+    },
+    testRulesEngine({state}) { // a dev utility that can be switch up to 'ping' different things on the back end
+      console.log(`got as far as the state module`);
+      stateConnection.testRulesEngine(state.gameId);
     },
     getGameParameters() {
       stateConnection.getGameParameters();

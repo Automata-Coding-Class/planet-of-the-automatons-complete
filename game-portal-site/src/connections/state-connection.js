@@ -73,11 +73,19 @@ export function createStateConnection() {
     return socket.emit('stopGame');
   };
 
+  const testRulesEngine = (gameId) => {
+    console.log(`StateConnection - testRulesEngine. gameId=${gameId}`);
+    socket.emit('gameParamsRequest', gameId, response => {
+      console.log(`gameParamsResponse:`, response);
+    });
+  };
+
   return {
     objectName: 'StateMachineConnection',
     createConnection: createConnection,
     disconnect: coreConnection.disconnect,
     ping: coreConnection.ping,
+    testRulesEngine: testRulesEngine,
     requestAvailableRulesEngines: requestAvailableRulesEngines,
     getGameParameters: getGameParameters,
     requestNewGame: requestNewGame,

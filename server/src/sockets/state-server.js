@@ -38,10 +38,10 @@ class StateServer extends SocketServerCore {
       this.emit('stopGame');
     });
 
-    socket.on('gameParamsRequest', (fn) => {
+    socket.on('gameParamsRequest', (gameId, fn) => {
       try {
-        this.log(`gameParamsRequest`);
-        this.emit('gameParamsRequest', {callback: fn});
+        this.log(`gameParamsRequest for game ${gameId}`);
+        this.emit('gameParamsRequest', {gameId: gameId, callback: fn});
       } catch (e) {
         this.error(`gamesParamsRequest failed: %O`, e);
       }
