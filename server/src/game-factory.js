@@ -3,6 +3,7 @@ const NetScan = require('netscan');
 const scanner = new NetScan();
 const network = require('network');
 const uuid = require('uuid/v1');
+const logger = require('./logger');
 
 const GameProxy = require('./sockets/clients/game-proxy');
 
@@ -10,16 +11,18 @@ const rulesNamespaceIdentifier = 'rules';
 const ipScanRangeSize = process.env.IP_SCAN_RANGE_SIZE !== undefined ? process.env.IP_SCAN_RANGE_SIZE : 100;
 const ipPattern = /^(\d+)\.(\d+)\.(\d+)\.(\d+)/;
 
-function getRulesEnginePort() {
-  const rawPortValue = process.env.RULES_ENGINE_PORT || '5000';
-  const port = parseInt(rawPortValue, 10);
-  if (isNaN(port)) { // named pipe
-    return rawPortValue;
-  }
-  if (port >= 0) { // port number
-    return port;
-  }
-  return false;
+function getRulesEnginePorts() {
+  logger.info(`RULES_ENGINE_PORTS: ${process.env.RULES_ENGINE_PORTS}`);
+  const rawPortValue = process.env.RULES_ENGINE_PORTS || '5000';
+  return rawPortValue.split(/\s*,\s*/).map(str => {
+    const port = parseInt(str, 10);
+    if (isNaN(port)) { // named pipe
+      return str;
+    }
+    if (port >= 0) { // port number
+      return port;
+    }
+  });
 }
 
 function getStartingIpAddress() {
@@ -57,9 +60,12 @@ function getEngineList() {
   console.log(`inside getEngineList`);
   return getStartingIpAddress()
     .then(startingIp => {
+
+      const rulesEnginePorts = getRulesEnginePorts();
+      logger.info(`GameFactory - will scan port range %o`, rulesEnginePorts);
       const scannerOptions = {
         protocol : ['http'],
-        ports: [getRulesEnginePort()], //[80, 90, 443, 1337],
+        ports: rulesEnginePorts, //[80, 90, 443, 1337],
         codes: [200, 201, 202], //only count it if a 200 comes back,
         errors : [], //like 'ETIMEDOUT'
         paths: '/api/helloworld' || [string], // optional to have it hit a specific endpoint
@@ -81,7 +87,15 @@ function getEngineList() {
       console.log(`ipSegments:`, ipSegments);
       return new Promise((resolve, reject) => {
         scanner.scan(scannerOptions, function callback(results) {
-          resolve(results);
+          resolve(results.reduce((list, entry) => {
+            for(let i=0; i < list.length; i++) {
+              if(list[i].ip === entry.ip && list[i].port === entry.port) {
+                return list;
+              }
+            }
+            list.push(entry);
+            return list;
+          }, []));
           /*
             results will contain response
             {
