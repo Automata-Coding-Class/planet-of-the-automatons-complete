@@ -32,7 +32,7 @@ function log(msg, ...args) {
   logger.info(`RulesEngine - ` + msg, ...args);
 }
 
-const createNewRulesEngine = function() {
+const createNewRulesEngine = function () {
   const server = instantiateHttpServer();
   const socket = io(server, {path: '/rules'});
   const namespace = socket.of(namespaceIdentifier);
@@ -46,9 +46,14 @@ const createNewRulesEngine = function() {
   }
 
   socket.on('connection', (client) => {
-    client.on('newGameRequested', (options, ack) => {
+    logger.info(`RulesEngine - client connected: %o`, client);
+    client.on('newGameRequested', (options, fn) => {
       const newGame = addNewGame(options);
-      ack({gameData: newGame.getGameData()});
+      newGame.on('gameOver', () => {
+        logger.info(`RulesEngine: received gameOver event from game '%s'`, newGame.id);
+        client.emit('gameOver', newGame.getGameData());
+      });
+      fn({gameData: newGame.getGameData()});
     });
     client.on('gameParamsRequest', (gameId, fn) => {
       const game = activeGames.get(gameId);
@@ -60,6 +65,54 @@ const createNewRulesEngine = function() {
       const game = activeGames.get(gameId);
       if (game !== undefined && fn !== undefined) {
         fn(game.getGameData());
+      }
+    });
+    client.on('startGame', (gameId, playerList, fn) => {
+      log(`startGame ${gameId}: %o`, playerList);
+      const game = activeGames.get(gameId);
+      if (game !== undefined && fn !== undefined) {
+        fn(game.start(playerList));
+      }
+    });
+    client.on('advanceFrame', (gameId, frameResponseData, fn) => {
+      log(`advanceFrame (gameId= ${gameId}). frameResponseData: %o`, frameResponseData);
+      const game = activeGames.get(gameId);
+      if (game !== undefined && fn !== undefined) {
+        game.processFrameResponses(frameResponseData.frameResponse)
+          .then(updatedGameData => {
+            log('updatedGameData: %o', updatedGameData);
+            fn(updatedGameData);
+          },
+            err => {
+            log(`game '%s' rejected processFrameResponses call: %o`, game.id, err);
+            });
+      }
+    });
+    client.on('pauseGame', (gameId, fn) => {
+      log(`pauseGame ${gameId}`);
+      const game = activeGames.get(gameId);
+      if (game !== undefined && fn !== undefined) {
+        const gameData = game.pause();
+        logger.info(`RuleEngine will return paused game data: %o`, gameData);
+        fn(gameData);
+      }
+    });
+    client.on('resumeGame', (gameId, fn) => {
+      log(`resumeGame ${gameId}`);
+      const game = activeGames.get(gameId);
+      if (game !== undefined && fn !== undefined) {
+        const gameData = game.resume();
+        logger.info(`RuleEngine resumed game: %o`, gameData);
+        fn(gameData);
+      }
+    });
+    client.on('stopGame', (gameId, fn) => {
+      const game = activeGames.get(gameId);
+      if (game !== undefined) {
+        const finalState = game.stop();
+        if(fn !== undefined) {
+          fn(finalState);
+        }
       }
     });
   });

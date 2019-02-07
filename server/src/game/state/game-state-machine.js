@@ -16,6 +16,9 @@ module.exports = function createGameStateMachine() {
     // if (playerAcknowledgementPromiseManager !== undefined)
     //   playerAcknowledgementPromiseManager.reject(message);
     currentState = states.errorCondition;
+    if(process.env.NODE_ENV === 'dev') {
+      throw new Error(message);
+    }
   }
 
   function setState(newState) {
@@ -45,7 +48,7 @@ module.exports = function createGameStateMachine() {
   // let playerAcknowledgementPromiseManager = createPendingStateManager(run, () => setState(states.errorCondition));
 
   function start() {
-    setState(states.starting);
+    setState(states.awaitingFrameResponse);
     // return new Promise(playerAcknowledgementPromiseManager.makePromiseHandler);
   }
 

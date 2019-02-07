@@ -24,6 +24,7 @@ class EventServer extends SocketServerCore {
       fn({players: players});
     });
     socket.on('frameResponse', (frameResponse) => {
+      this.log(`frameResponse received: %o`, frameResponse);
       if (this.pendingStates.has(frameResponse.frameId)) {
         const pState = this.pendingStates.get(frameResponse.frameId);
         pState.checkId(socket.decodedToken.userId, frameResponse.response);
@@ -60,12 +61,8 @@ class EventServer extends SocketServerCore {
     this.log('broadcasting game initialization for game %s', JSON.stringify(gameData));
     const sanitizedData = Object.assign({}, gameData);
     delete sanitizedData.layout;
+    this.log('sanitized data: %o', sanitizedData);
     this.publishEvent('newGameCreated', sanitizedData);
-  }
-
-  broadcastGameStart() {
-    this.log('broadcasting game start');
-    this.distributeGameState();
   }
 
   pauseGame() {
@@ -79,12 +76,12 @@ class EventServer extends SocketServerCore {
     // this.pendingStates.clear();
   }
 
-  stopGame() {
-    this.publishEvent('gameStopped');
+  stopGame(gameId) {
+    this.publishEvent('gameStopped', gameId);
     this.pendingStates.clear();
   }
 
-  createPendingState(stateId, nextAction, idList, timeoutPeriod) {
+  createPendingState(gameId, stateId, nextAction, idList, timeoutPeriod) {
     const pendingIds = new Set(idList);
     const collectedResponses = {};
     const timeout = setTimeout(() => {
@@ -101,7 +98,7 @@ class EventServer extends SocketServerCore {
         pendingIds.delete(id);
       }
       if (pendingIds.size === 0) {
-        console.log(`all pending ids resolved. will not time out`);
+        console.log(`all pending ids resolved. will not time out`, collectedResponses);
         clearTimeout(timeout);
         if (nextAction !== undefined) {
           nextAction(collectedResponses);
@@ -118,8 +115,10 @@ class EventServer extends SocketServerCore {
     this.pendingStates.delete(stateId);
   }
 
-  distributeGameState(framePacketData) {
-    this.log(`distributing game state: %o`, framePacketData);
+  distributeGameState(gameState) {
+    const gameId = gameState.id;
+    const frame = gameState.frame;
+    this.log(`distributing game state for ${gameId}: %o`, frame);
     const playerSockets = this.getActivePlayerSockets();
     const frameId = uuid();
     const notifiedPlayers = [];
@@ -127,21 +126,17 @@ class EventServer extends SocketServerCore {
       if (socket.decodedToken !== undefined && socket.decodedToken.loginType === 'player') {
         notifiedPlayers.push(socket.decodedToken.userId);
         socket.emit('newFrame', {
-          frameId: frameId,
-          data: framePacketData !== undefined ? framePacketData[socket.decodedToken.userId] : undefined
+          gameId: gameId,
+          frameId: frame.id,
+          data: frame.packets !== undefined ? frame.packets[socket.decodedToken.userId] : undefined
         });
       }
     });
-    const pendingState = framePacketData === undefined ?
-      // initial 'ping' to players
-      this.createPendingState(frameId, () => {
-        this.emit('playersReady');
-      }, notifiedPlayers, 500) :
-      // all subsequent frames
-      this.createPendingState(frameId, (collectedResponses) => {
-        this.emit('frameResponsesReceived', collectedResponses);
+    const pendingState = this.createPendingState(gameId, frameId, (collectedResponses) => {
+      this.log(`all frame responses received: %o`, collectedResponses);
+        this.emit('frameResponsesReceived', {gameId: gameId, frameResponse: collectedResponses});
       }, notifiedPlayers, 500);
-    this.pendingStates.set(frameId, pendingState);
+    this.pendingStates.set(frame.id, pendingState);
   }
 
   // add local event handlers here

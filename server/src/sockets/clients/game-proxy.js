@@ -6,11 +6,20 @@ const rulesNamespaceIdentifier = 'rules';
 
 class GameProxy extends EventEmitter {
 
-  makePromiseBasedCall(socket, eventName) {
+  makePromiseBasedCall(socket, eventName, ...args) {
     return new Promise(resolve => {
-      socket.emit(eventName, this.gameId, response => {
+      // creating this array so that we can flexibly insert 'args'
+      // between the required params and the callback, since the
+      // callback is conventionally the last argument
+      let messageParams = [eventName, this.gameId];
+      if (args !== undefined && args.length > 0) {
+        messageParams = messageParams.concat(args);
+      }
+      messageParams.push(response => {
         resolve(response);
       });
+      logger.info(`GameProxy - makePromisedBasedCall. messageParams: %o`, messageParams);
+      socket.emit(...messageParams);
     });
   }
 
@@ -22,6 +31,9 @@ class GameProxy extends EventEmitter {
 
     const proxy = this;
     let socket = undefined;
+    let active = false;
+    let paused = false;
+    let pendingState = undefined;
 
     function createConnection() {
       return new Promise((resolve, reject) => {
@@ -35,6 +47,10 @@ class GameProxy extends EventEmitter {
             proxy.gameId = response.gameData.id;
             resolve(proxy);
           });
+          socket.on('gameOver', finalGameData => {
+            logger.info(`GameProxy '%s' received gameOver socket event: %o`, proxy.gameId, finalGameData);
+            proxy.emit('gameOver', finalGameData);
+          })
         });
 
       });
@@ -48,7 +64,44 @@ class GameProxy extends EventEmitter {
       return this.makePromiseBasedCall(socket, 'gameDataRequest');
     };
 
+    this.start = playerList => {
+      logger.info(`GameProxy start: %o`, playerList);
+      active = true;
+      return this.makePromiseBasedCall(socket, 'startGame', playerList)
+        .then(gameData => {
+          logger.info(`GameProxy - startGame response: %o`, gameData);
+          return gameData;
+        })
+    };
+
+    this.pause = () => {
+      paused = true;
+      return this.makePromiseBasedCall(socket, 'pauseGame');
+    };
+
+    this.resume = () => {
+      paused = false;
+      pendingState = undefined;
+      return this.makePromiseBasedCall(socket, 'resumeGame');
+    };
+
+    this.advanceFrame = (frameResponseData) => {
+      logger.info(`GameProxy - advanceFrame. frameResponseData: %o`, frameResponseData);
+      return this.makePromiseBasedCall(socket,'advanceFrame', frameResponseData);
+    };
+
+    this.stop = () => {
+      active = false;
+      return this.makePromiseBasedCall(socket, 'stopGame');
+    };
+
     this.connect = createConnection;
+
+    this.isStoppedOrPaused = () => paused || !active;
+
+    this.setPendingState = gameState => pendingState = gameState;
+
+    this.getPendingState = () => pendingState;
   }
 
 }

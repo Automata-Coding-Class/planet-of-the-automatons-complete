@@ -69,26 +69,14 @@ function connect(httpServer) {
       .addPercentAssets(0.1);
     GameFactory.createNewGame(gameOptions)
       .then(gameProxy => {
-        console.log(gameProxy);
+        logger.info(`GameEngine - new game: %o`, gameProxy);
+        gameProxy.on('gameOver', finalGameData => {
+          logger.info(`GameEngine - received gameOver local event from proxy '%s': %o`, gameProxy.gameId, finalGameData);
+          finishGame(finalGameData.id, finalGameData)
+        });
         activeGames.set(gameProxy.gameId, gameProxy);
         eventServer.broadcastGameInitialization(gameProxy.initialGameData);
         stateServer.newGameHandler(gameProxy.initialGameData);
-
-        // START: old code
-        const oldCode = () => {
-          const game = newGame(gameOptions);
-          game.on('gameOver', () => {
-            logger.info(`RECEIVED GAME OVER EVENT`);
-            finishGame();
-          });
-
-          const gameData = game.getGameData();
-
-          eventServer.broadcastGameInitialization(gameData);
-          stateServer.newGameHandler(gameData);
-        }
-        // END: old code
-
       });
   });
   stateServer.on('gameParamsRequest', request => {
@@ -103,11 +91,6 @@ function connect(httpServer) {
           }
         });
     }
-    const oldCode = () => {
-      if (request.callback !== undefined) {
-        request.callback(currentGame.getGameParameters());
-      }
-    }
   });
   stateServer.on('gameDataRequested', request => {
     logger.info(`gameParamsRequest event handler: %o:`, request);
@@ -118,55 +101,98 @@ function connect(httpServer) {
           request.callback(response);
         })
     }
-    const oldCode = () => {
-      if (callback !== undefined) {
-        callback(currentGame !== undefined ? currentGame.getGameData() : undefined);
-      }
+  });
+  stateServer.on('startGame', request => {
+    const game = activeGames.get(request.gameId);
+    if (game !== undefined) {
+      logger.info(`startGame handler: %o`, request);
+      game.start(eventServer.getActivePlayerList())
+        .then(gameData => {
+          logger.info(`startGame handler response received: %o`, gameData);
+          notifyRemoteClients(gameData);
+        })
+    }
+
+  });
+  stateServer.on('pauseGame', request => {
+    logger.info('WILL PAUSE GAME!!');
+    eventServer.pauseGame(request.gameId);
+    const game = activeGames.get(request.gameId);
+    if (game !== undefined) {
+      game.pause()
+        .then(response => {
+          logger.info(`game was paused. response is: %o`, response);
+          stateServer.broadcastGameState(response);
+        });
     }
   });
-  stateServer.on('startGame', () => {
-    stateServer.broadcastGameState(currentGame.start(eventServer.getActivePlayerList()));
-    eventServer.broadcastGameStart();
-  });
-  stateServer.on('pauseGame', () => {
-    logger.info('WILL PAUSE GAME!!');
-    eventServer.pauseGame();
-    stateServer.broadcastGameState(currentGame.pause());
-  });
-  stateServer.on('resumeGame', () => {
+
+  stateServer.on('resumeGame', request => {
     logger.info('WILL RESUME GAME!!');
-    eventServer.resumeGame();
-    stateServer.broadcastGameState(currentGame.resume());
+    eventServer.resumeGame(request.gameId);
+    const game = activeGames.get(request.gameId);
+    if (game !== undefined) {
+      const pendingState = game.getPendingState();
+      game.resume()
+        .then(gameData => {
+          logger.info(`GameEngine - game.resume() returned: %o`, gameData);
+          if (pendingState !== undefined) {
+            logger.info(`GameEngine - pendingState: %o`, pendingState);
+            notifyRemoteClients(pendingState);
+          }
+        });
+    }
   });
 
-  function finishGame() {
-    eventServer.stopGame();
-    stateServer.broadcastGameState(currentGame !== undefined ? currentGame.stop() : undefined);
+  function finishGame(gameId) {
+    logger.info(`GameEngine - finishGame '%s'`, gameId);
+    eventServer.stopGame(gameId);
+    const game = activeGames.get(gameId);
+    if (game !== undefined) {
+      game.stop().then(response => {
+        stateServer.broadcastGameState(response);
+      });
+    }
   }
 
-  stateServer.on('stopGame', () => {
-    finishGame();
+  stateServer.on('stopGame', request => {
+    finishGame(request.gameId);
   });
 
+
+  function notifyRemoteClients(updatedGameData) {
+    eventServer.distributeGameState(updatedGameData);
+    stateServer.broadcastGameState(updatedGameData);
+  }
+
+  // this function is isolated because it needs to be part of this 'top-level' closure;
+  // or, more to the point, the promise handler inside 'advanceFrame' must not use the
+  // game state that gets embedded in its closure
+  function checkUpdatedGameState(gameId, updatedGameData) {
+    const game = activeGames.get(gameId);
+    if (game !== undefined && !game.isStoppedOrPaused()) {
+      notifyRemoteClients(updatedGameData);
+    } else {
+      game.setPendingState(updatedGameData);
+    }
+    logger.info(`GameEngine - checked updated game state. GameProxy: paused=%o; pendingState: %o`, game.isStoppedOrPaused(), game.getPendingState());
+  }
+
   function advanceFrame(frameResponseData) {
-    if (currentGame.getCurrentStatus().name !== 'stopped') {
-      currentGame.nextFrame(frameResponseData)
-        .then(gameData => {
-          logger.info(`preparing to send updated game data: %o`, gameData);
-          if (gameData !== undefined) {
-            setTimeout(() => {
-              eventServer.distributeGameState(gameData.framePackets);
-            }, frameDelay);
-          }
-          stateServer.broadcastGameState(gameData);
+    logger.info(`GameEngine - advanceFrame. frameResponseData: %o`, frameResponseData);
+    const game = activeGames.get(frameResponseData.gameId);
+    if (game !== undefined) {
+      logger.info(`GameEngine - found active: %o`, game);
+      game.advanceFrame(frameResponseData)
+        .then(updatedGameData => {
+          logger.info(`GameEngine - advanceFrame updatedGameData: %o`, updatedGameData);
+          setTimeout(() => {
+            checkUpdatedGameState(game.gameId, updatedGameData);
+          }, frameDelay)
         });
     }
   }
 
-  eventServer.on('playersReady', () => {
-    logger.info(`GameEngine - playersReady`);
-    advanceFrame();
-  });
   eventServer.on('frameResponsesReceived', (frameResponseData) => {
     logger.info(`GameEngine - frameResponseReceived: %o`, frameResponseData);
     advanceFrame(frameResponseData);

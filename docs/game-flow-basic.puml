@@ -1,0 +1,80 @@
+@startuml
+'autonumber
+actor Portal
+participant GameEngine
+participant StateServer
+participant EventServer
+boundary GameProxy
+participant RulesEngine
+entity Game
+control GameTimer
+collections Clients
+
+Portal --\ StateServer: startGame
+StateServer -/ GameEngine: startGame
+GameEngine -\ EventServer: getActivePlayerList()
+GameEngine \- EventServer
+GameEngine -> GameProxy: start(playerList)
+GameProxy --\ RulesEngine: startGame[playerList]
+RulesEngine -\ Game: start(playerList)
+Game ->> GameTimer: start
+Game -> Game: start
+note right: sets state to 'starting'
+RulesEngine \- Game: [gameData]
+GameProxy \-- RulesEngine: [gameData]
+GameEngine <- GameProxy: [gameData]
+'GameEngine -> GameEngine: setTimeout(frameDelay)
+GameEngine -> StateServer: broadcastGameState(gameData)
+Portal <-- StateServer: gameStateUpdated[gameData]
+loop
+    GameEngine -> GameEngine: advanceFrame
+    GameEngine -> GameProxy: advanceFrame
+    GameProxy --> RulesEngine: advanceFrame[frameResponseData{=undefined?}]
+    RulesEngine -> Game: processFrameResponses
+    RulesEngine <- Game: [updatedGameData]
+    GameProxy <-- RulesEngine: [updatedGameData]
+    GameEngine <- GameProxy: [updatedGameData]
+    GameEngine -> GameEngine: setTimeout(frameDelay)
+    GameEngine -> StateServer: broadcastGameState(updatedGameData)
+    GameEngine -> EventServer: distributeGameState(updatedGameData.framePacketData)
+    Portal <-- StateServer: gameStateUpdated[gameData]
+    EventServer -> EventServer: distributeGameState
+    EventServer --> Clients: newFrame[gameId, frameId, framePacketData]
+    EventServer <-- Clients: frameResponse[gameId, frameId, response]
+    GameEngine <- EventServer: frameResponsesReceived
+    break user-initiated stop
+        Portal --> StateServer: stopGame
+        StateServer -> GameEngine: stopGame
+        GameEngine -> EventServer: stopGame(gameId)
+        EventServer -> Clients: gameStopped[gameId]
+        GameEngine -> GameEngine: finishGame(gameId)
+        alt game exists
+            GameEngine -\ GameProxy: stop
+            GameProxy --\ RulesEngine: stopGame[gameId]
+            alt game exists
+                RulesEngine -\ Game: stop
+                RulesEngine \- Game: [finalState]
+                GameProxy \-- RulesEngine: fn
+                GameProxy \-- GameEngine: [finalState]
+                GameEngine -> StateServer: broadcastGameState(finalState)
+                StateServer --> Portal: gameStateUpdated[gameData aka finalState]
+            end
+        end
+    end
+    break game-controlled stop
+        Game <- GameTimer: endGame
+        RulesEngine <- Game: gameOver
+        GameProxy <-- RulesEngine: gameOver
+        GameEngine <- GameProxy: gameOver
+        GameEngine -> GameEngine: finishGame
+        GameEngine -> EventServer: stopGame
+        GameEngine -x GameProxy: stop
+        alt game.stop returns
+            GameEngine -> StateServer: broadcastGameState
+            Portal <-- StateServer: gameStateUpdated
+        end
+
+
+    end
+end
+@enduml

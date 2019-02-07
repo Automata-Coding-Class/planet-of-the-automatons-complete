@@ -7,13 +7,13 @@ module.exports = () => {
   const running = {name: 'running'};
   const processingFrame = {name: 'processingFrame'};
   const awaitingFrameResponse = {name: 'awaitingFrameResponse'};
-  initialized.permissibleNextStates = [starting, errorCondition];
+  initialized.permissibleNextStates = [awaitingFrameResponse, running, errorCondition];
   starting.permissibleNextStates = [running, awaitingFrameResponse, processingFrame, errorCondition];
-  stopped.permissibleNextStates = [starting, running, errorCondition];
+  stopped.permissibleNextStates = [errorCondition];
   running.permissibleNextStates = [awaitingFrameResponse, paused, stopped, errorCondition];
-  paused.permissibleNextStates = [running, awaitingFrameResponse, stopped, errorCondition]
+  paused.permissibleNextStates = [running, awaitingFrameResponse, stopped, errorCondition];
   processingFrame.permissibleNextStates = [running, awaitingFrameResponse, errorCondition];
-  awaitingFrameResponse.permissibleNextStates = [processingFrame, paused, stopped, errorCondition];
+  awaitingFrameResponse.permissibleNextStates = [processingFrame, running, paused, stopped, errorCondition];
 
   return {
     errorCondition: errorCondition,

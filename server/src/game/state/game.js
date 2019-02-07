@@ -40,6 +40,8 @@ const createNewGame = function createNewGame(options) {
   const playerData = new Map();
   const numberOfAssets = Math.round(getNumberOfCells() * options.percentAssets);
 
+  let frameId = -1;
+
   function getNumberOfCells() {
     return cellStates.length;
   }
@@ -231,6 +233,7 @@ const createNewGame = function createNewGame(options) {
 
   function start(players) {
     logger.info(`Game - start. Players: %o`, players);
+    frameId = 0;
     const stateSnapshot = [].concat(cellStates);
     distributePlayers(players);
     statusManager.start();
@@ -277,7 +280,7 @@ const createNewGame = function createNewGame(options) {
 
   function makeFramePackets() {
     const playerPositions = getPlayerPositions();
-    logger.info(`playerPositions: %o`, playerPositions);
+    logger.info(`Game - playerPositions: %o`, playerPositions);
     return Object.keys(playerPositions).reduce((framePacketData, positionKey) => {
       framePacketData[positionKey] = getNeighbourCellValues(cellStates, numberOfColumns, playerPositions[positionKey].index);
       return framePacketData;
@@ -297,10 +300,13 @@ const createNewGame = function createNewGame(options) {
   function pause() {
     statusManager.pause();
     gameTimer.pause();
-    return getGameData();
+    const gameData = getGameData();
+    logger.info(`Game '%s' has just paused itself: %o`, gameId, gameData);
+    return gameData;
   }
 
   function resume() {
+    logger.info(`Game - will resume game ${gameId}`);
     statusManager.resume();
     gameTimer.resume().then(() => {
         logger.info(`resumed timer promise fulfilled`);
@@ -339,14 +345,17 @@ const createNewGame = function createNewGame(options) {
 
   function getGameData() {
     const framePacketData = makeFramePackets();
-    logger.info(`framePacketData: %o`, framePacketData);
+    logger.info(`Game - frame id '%i': %o`, frameId, framePacketData);
     return {
       id: gameId,
       status: statusManager.getCurrentStatus().name,
       elapsedTime: gameTimer.getElapsedTime(),
       parameters: getGameParameters(),
       layout: getCurrentState(),
-      framePackets: framePacketData,
+      frame: {
+        id: frameId,
+        packets: framePacketData
+      },
       playerData: getCurrentPlayerStates(),
       totalAssets: numberOfAssets
     }
@@ -369,9 +378,14 @@ const createNewGame = function createNewGame(options) {
   }
 
   function processFrameResponses(playerResponseData) {
-    return new Promise((resolve /*, reject*/) => {
+    frameId++;
+    return new Promise((resolve , reject) => {
       if (playerResponseData === undefined) {
         resolve(Object.assign(getGameData(), {changeSummary: undefined}));
+        return;
+      }
+      if(statusManager.getCurrentStatus().name === 'stopped') {
+        reject({message: 'game has ended; will not process more frames', data: getGameData()});
         return;
       }
       const changeSummary = [];
@@ -419,7 +433,11 @@ const createNewGame = function createNewGame(options) {
             break;
         }
       });
-      resolve(Object.assign(getGameData(), {changeSummary: changeSummary}));
+      const gameData = getGameData();
+      if(gameData.status !== 'paused') {
+        logger.info(`processedFrameResponse: %o, %o`, gameData, changeSummary);
+        resolve(Object.assign(gameData, {changeSummary: changeSummary}));
+      }
     });
   }
 
@@ -485,7 +503,9 @@ const createNewGame = function createNewGame(options) {
   function generateGameId() {
     const cellStatesString = getCellStatesStringRepresentation();
     const seed = (new Date()).toISOString() + cellStatesString;
-    return sha512(lzutf8.compress(seed, {outputEncoding: 'StorageBinaryString'}));
+    const compressedCellStates = lzutf8.compress(seed, {outputEncoding: 'StorageBinaryString'});
+    const hash = sha512(compressedCellStates);
+    return hash.substr(0, 16);
   }
 
   const gameId = generateGameId();

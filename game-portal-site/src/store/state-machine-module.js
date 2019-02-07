@@ -191,18 +191,18 @@ export default {
           commit('gameDataUpdated', gameData);
         });
     },
-    startGame({dispatch}, playerList) {
+    startGame({dispatch, state}, playerList) {
       console.log(`StateMachine.startGame - playerList`, playerList);
       dispatch('setPlayerAttributes', playerList);
-      stateConnection.startGame();
+      stateConnection.startGame(state.gameId);
     },
-    pauseGame({dispatch}, playerList) {
+    pauseGame({state}) {
       console.log(`StateMachine.pauseGame`);
-      stateConnection.pauseGame();
+      stateConnection.pauseGame(state.gameId);
     },
-    resumeGame({dispatch}, playerList) {
+    resumeGame({state}) {
       console.log(`StateMachine.resumeGame`);
-      stateConnection.resumeGame();
+      stateConnection.resumeGame(state.gameId);
     },
     setPlayerAttributes({commit, state}, playerList) {
       console.log(`available icons:`, state.stylingOptions.iconNames);
@@ -217,9 +217,8 @@ export default {
       });
       commit('newPlayerAttributesReceived', playerAttributes);
     },
-    stopGame({commit}, playerList) {
-      stateConnection.stopGame();
-      // commit('newPlayerAttributesReceived', {});
+    stopGame({state}) {
+      stateConnection.stopGame(state.gameId);
     }
   }
 }
