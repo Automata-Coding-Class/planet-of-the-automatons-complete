@@ -124,17 +124,72 @@
             d.column = i % this.columns;
             d.row = Math.floor(i / this.columns)
           }
-          return d && d.type === 'asset' ? d : null;
+          return d && (/(asset|scoring|powerup|hazard)/i).test(d.type) ? d : null;
         })
           .append('g')
-          .attr('class', 'asset')
+          .attr('class', d => `asset ${d.type} ${d.key}`)
           .attr('transform', d => `translate(${x(d.column)}, ${y(d.row)})`);
         asset
           .append('circle')
           .attr('cx', d => /*x(d.column) +*/ x(0.5))
           .attr('cy', d => /*y(d.row) +*/ y(0.5))
           .attr("r", d => Math.min(x(0.4), y(0.4)))
-          .attr("fill", 'gold');
+          .attr("fill", 'grey');
+
+        asset
+          .append('svg:foreignObject')
+          .attr('x', x(0.1))
+          .attr('y', y(0.05))
+          .attr('height', y(1))
+          .attr('width', x(1))
+          .attr('font-size', y(.625))
+          .attr('text-align', 'left')
+          // .attr('color', d => {
+          //   let colorName = 'silver';
+          //   if(this.playerAttributes[d.id] !== undefined) {
+          //     colorName = this.playerAttributes[d.id].color;
+          //   }
+          //   return colorName;
+          // })
+          .html(d => {
+            let iconName = '';
+            switch(d.key) {
+              case 'addTime' :
+                iconName = 'stopwatch';
+                break;
+              case 'blaster' :
+                iconName = 'fighter-jet';
+                break;
+              case 'bomb' :
+                iconName = 'bomb';
+                break;
+              case 'diagonality' :
+                iconName = 'expand-arrows-alt';
+                break;
+              case 'magnet' :
+                iconName = 'magnet';
+                break;
+              case 'missedTurn' :
+                iconName = 'poop';
+                break;
+              case 'multiPoint' :
+                iconName = 'gem';
+                break;
+              case 'point' :
+                iconName = 'dollar-sign';
+                break;
+              case 'poison' :
+                iconName = 'skull-crossbones';
+                break;
+              default:
+                iconName = 'toolbox';
+                break;
+            }
+            // if(this.playerAttributes[d.id] !== undefined) {
+            //   iconName = this.playerAttributes[d.id].iconName;
+            // }
+            return `<i class="fa fa-${iconName}"></i>`;
+          });
 
           // asset
           //   .append('svg:foreignObject')
@@ -182,7 +237,7 @@
           return d && d.type === 'player' ? d : null;
         })
           .append('g')
-          .attr('class', 'asset')
+          .attr('class', 'player')
           .attr('transform', d => `translate(${x(d.column)}, ${y(d.row)})`);
         player
           .append('rect')

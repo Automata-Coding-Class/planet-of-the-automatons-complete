@@ -15,8 +15,8 @@ const {
   getNeighbourCellIndices
 } = require('./state-utils');
 
-const createGameObject = require('./game-object');
-
+const GameObject = require('./game-object');
+/**/
 const positionDataFilters = {
   returnAll: () => true,
   playersOnly: positionData => positionData.data.type === 'player',
@@ -226,8 +226,21 @@ const createNewGame = function createNewGame(options) {
       placeGameObject({id: 'primary_target', type: 'target'});
     }
     distributeObstacles(numberOfObstacles);
+
+    const gameObjects = {
+      scoring: [],
+      powerUp: [],
+      hazard: []
+    };
+    const generateGameObject = () => {
+      const category = GameObject.getRandomCategoryKey();
+      const objectKey = GameObject.getRandomObjectKeyForCategory(category);
+      const newObj = { type: category, id: `${category}_${gameObjects[category].length}`, category: category, key: objectKey };
+      gameObjects[category].push(newObj);
+      return newObj;
+    };
     for (let i = 0; i < numberOfAssets; i++) {
-      placeGameObject({id: `asset_${i}`, type: 'asset'});
+      placeGameObject(generateGameObject());
     }
   }
 

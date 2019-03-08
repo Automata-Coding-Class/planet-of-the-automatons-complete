@@ -166,9 +166,24 @@ blockquote {
 
               .asset {
                 circle {
-                  fill: lightgray;
+                  fill: transparent;
                   //stroke-width: 2px;
                   //stroke: magenta;
+                }
+                $object-base-color: silver;
+                $object-base-color: saturate(lighten($object-base-color, 5%), 30%);
+                color: $object-base-color;
+
+                &.scoring {
+                  color: saturate(adjust_hue($object-base-color, 40), 100%);
+                }
+
+                &.powerUp {
+                  color: adjust_hue($object-base-color, 90);
+                }
+
+                &.hazard {
+                  color: $object-base-color;
                 }
 
                 .icon {
