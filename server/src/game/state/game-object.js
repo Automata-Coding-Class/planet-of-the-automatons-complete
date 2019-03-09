@@ -15,7 +15,7 @@ const categories = {
     }
   },
   powerUp: {
-    weight: 3,
+    weight: 1,
     items: {
       addTime: {
         category: 'powerUp',
@@ -57,12 +57,14 @@ const categories = {
         category: 'hazard',
         activation: 'instant',
         action: (player, cellStates) => {
-          const startingScore = player.score;
-          player.score = 0;
+          const startingScore = player.getScore();
+          const assets = player.assets.scoring !== undefined ? player.assets.scoring : [];
+          player.assets.scoring = [];
           return {
             change: 'scoreAdjustment',
             playerId: player.id,
-            scoreAdjustment: -startingScore
+            scoreAdjustment: -startingScore,
+            assets: assets
           }
         }
       }

@@ -4,6 +4,7 @@ const lzutf8 = require('lzutf8');
 const sha512 = require('js-sha512');
 const createGameStateMachine = require('./game-state-machine');
 const createGameTimer = require('./game-timer');
+const createPlayer = require('./player');
 
 const {
   getRandomIntegerInRange,
@@ -221,6 +222,15 @@ const createNewGame = function createNewGame(options) {
     }
   }
 
+  function redistributeObjects(objectsToRedistribute) {
+    objectsToRedistribute.forEach(obj => {
+      if(obj.originalIndex !== undefined && obj.originalIndex >= 0 && cellStates[obj.originalIndex] === undefined) {
+        cellStates[obj.originalIndex] = obj;
+        delete obj.originalIndex;
+      }
+    })
+  }
+
   function setUp(numberOfObstacles, numberOfAssets, includeTarget) {
     logger.info(`Game - setup - includeTarget? ${includeTarget}`);
     if (includeTarget) {
@@ -258,7 +268,7 @@ const createNewGame = function createNewGame(options) {
     playerData.clear();
     players.forEach(player => {
       placeGameObject({type: player.loginType, id: player.userId, name: player.username});
-      playerData.set(player.userId, {score: 0, assets: [], rawData: player});
+      playerData.set(player.userId, createPlayer(player));
     });
   }
 
@@ -351,7 +361,8 @@ const createNewGame = function createNewGame(options) {
   function getCurrentPlayerStates() {
     const playerStates = {};
     playerData.forEach((playerData, playerId) => {
-      playerStates[playerId] = playerData;
+      playerStates[playerId] = Object.assign({}, playerData, { score: playerData.getScore() });
+
     });
     return playerStates;
   }
@@ -404,6 +415,21 @@ const createNewGame = function createNewGame(options) {
       }
       const changeSummary = [];
       const playerPositions = getPlayerPositions();
+
+      function movePlayer(playerIndex, destinationCellIndex, playerId) {
+        const originalIndex = playerIndex;
+        const newIndex = destinationCellIndex;
+        if (moveEntry(playerPositions[playerId].index, newIndex)) {
+          changeSummary.push({
+            change: 'move',
+            type: 'player',
+            playerId: playerId,
+            from: originalIndex,
+            to: newIndex
+          });
+        }
+      }
+
       Object.keys(playerResponseData).forEach(playerId => {
         // TODO: record proposed states first and then do conflict resolution as necessary
         // but for now...
@@ -421,10 +447,10 @@ const createNewGame = function createNewGame(options) {
                 destinationCellOccupant !== undefined && (/(asset|scoring)/i).test(destinationCellOccupant.category)) {
                 const asset = removeEntry(destinationCellIndex);
                 if (player !== undefined) {
-                  player.score += destinationCellOccupant.value;
-                  logger.info(`*** UPDATED SCORE FOR PLAYER '${playerId}': ${player.score}`);
+                  player.addAsset(destinationCellIndex, asset);
+                  logger.info(`*** UPDATED SCORE FOR PLAYER '${playerId}': ${player.getScore()}`);
+                  movePlayer(playerIndex, destinationCellIndex, playerId);
                 }
-                destinationCellOccupant = undefined;
                 changeSummary.push({
                   change: 'acquisition',
                   playerId: playerId,
@@ -433,29 +459,21 @@ const createNewGame = function createNewGame(options) {
               }
               else if(destinationCellOccupant !== undefined && (/(powerUp|hazard)/i).test(destinationCellOccupant.category)) {
                 const asset = removeEntry(destinationCellIndex);
-                destinationCellOccupant = undefined;
+                movePlayer(playerIndex, destinationCellIndex, playerId);
                 if(asset.activation === 'instant' && asset.action !== undefined) {
                   const delta = asset.action(player);
                   switch(delta.change) {
                     case 'timeAdjustment':
                       adjustTime(delta.timeAdjustment);
                       break;
+                    case 'scoreAdjustment' :
+                      redistributeObjects(delta.assets);
+                      break;
                   }
                   changeSummary.push(delta);
                 }
-              }
-              if (destinationCellOccupant === undefined) {
-                const originalIndex = playerIndex;
-                const newIndex = destinationCellIndex;
-                if (moveEntry(playerPositions[playerId].index, newIndex)) {
-                  changeSummary.push({
-                    change: 'move',
-                    type: 'player',
-                    playerId: playerId,
-                    from: originalIndex,
-                    to: newIndex
-                  })
-                }
+              } else if (destinationCellOccupant === undefined) {
+                movePlayer(playerIndex, destinationCellIndex, playerId);
               }
             }
             break;
