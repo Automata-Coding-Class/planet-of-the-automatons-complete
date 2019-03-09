@@ -7,7 +7,7 @@ module.exports = function createGameTimer(duration) {
   let timeoutPromise = undefined;
   let startTime = undefined;
   let accruedTime = 0;
-  const totalTimeout = duration * 1000;
+  let totalTimeout = duration * 1000;
 
   function createTimeoutPromise(timeout) {
     startTime = new Date();
@@ -47,12 +47,27 @@ module.exports = function createGameTimer(duration) {
     // return (startTime !== undefined ? (new Date()).getTime() - startTime.getTime() : 0);
   }
 
+  function adjustTime(seconds) {
+    if(seconds < 0) {
+      throw new Error('only positive time adjustments are currently supported');
+    }
+    pause();
+    duration += seconds;
+    totalTimeout += seconds * 1000;
+    return resume();
+  }
+
+  function getDuration() {
+    return duration;
+  }
+
   return {
-    duration: duration,
+    getDuration: getDuration,
     start: start,
     pause: pause,
     resume: resume,
-    getElapsedTime: getElapsedTime
+    getElapsedTime: getElapsedTime,
+    adjustTime: adjustTime
   };
 };
 

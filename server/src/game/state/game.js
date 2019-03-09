@@ -50,7 +50,7 @@ const createNewGame = function createNewGame(options) {
   function getGameParameters() {
     return {
       boardGrid: {rows: numberOfRows, columns: numberOfColumns},
-      duration: gameTimer.duration
+      duration: gameTimer.getDuration()
     }
   }
 
@@ -324,6 +324,13 @@ const createNewGame = function createNewGame(options) {
     return getGameData();
   }
 
+  function adjustTime(seconds) {
+    gameTimer.adjustTime(seconds)
+      .then(() => {
+        endGame();
+      })
+  }
+
   function stop() {
     statusManager.stop();
     return getGameData();
@@ -409,12 +416,13 @@ const createNewGame = function createNewGame(options) {
             const destinationCellIndex = getRelativeIndex(playerIndex, numberOfRows, numberOfColumns, response.action.direction);
             let destinationCellOccupant = cellStates[destinationCellIndex];
             if (destinationCellIndex !== -1) {
+              const player = playerData.get(playerId);
               if (
                 destinationCellOccupant !== undefined && (/(asset|scoring)/i).test(destinationCellOccupant.category)) {
                 const asset = removeEntry(destinationCellIndex);
-                if (playerData.has(playerId)) {
-                  playerData.get(playerId).score += destinationCellOccupant.value;
-                  logger.info(`*** UPDATED SCORE FOR PLAYER '${playerId}': ${playerData.get(playerId).score}`);
+                if (player !== undefined) {
+                  player.score += destinationCellOccupant.value;
+                  logger.info(`*** UPDATED SCORE FOR PLAYER '${playerId}': ${player.score}`);
                 }
                 destinationCellOccupant = undefined;
                 changeSummary.push({
@@ -422,6 +430,19 @@ const createNewGame = function createNewGame(options) {
                   playerId: playerId,
                   acquired: asset
                 });
+              }
+              else if(destinationCellOccupant !== undefined && (/(powerUp|hazard)/i).test(destinationCellOccupant.category)) {
+                const asset = removeEntry(destinationCellIndex);
+                destinationCellOccupant = undefined;
+                if(asset.activation === 'instant' && asset.action !== undefined) {
+                  const delta = asset.action(player);
+                  switch(delta.change) {
+                    case 'timeAdjustment':
+                      adjustTime(delta.timeAdjustment);
+                      break;
+                  }
+                  changeSummary.push(delta);
+                }
               }
               if (destinationCellOccupant === undefined) {
                 const originalIndex = playerIndex;

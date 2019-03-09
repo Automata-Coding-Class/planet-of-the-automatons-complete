@@ -19,36 +19,52 @@ const categories = {
     items: {
       addTime: {
         category: 'powerUp',
-        activation: 'instant'
+        activation: 'instant',
+        action: (player, cellStates) => {
+          return {
+            change: 'timeAdjustment',
+            playerId: player.id,
+            timeAdjustment: 10
+          }
+        }
       },
-      blaster: {
-        category: 'powerUp',
-        activation: 'user'
-      },
-      bomb: {
-        category: 'powerUp',
-        activation: 'user'
-      },
-      diagonality: {
-        category: 'powerUp',
-        activation: 'instant'
-      },
-      magnet: {
-        category: 'powerUp',
-        activation: 'user'
-      },
+      // blaster: {
+      //   category: 'powerUp',
+      //   activation: 'user'
+      // },
+      // bomb: {
+      //   category: 'powerUp',
+      //   activation: 'user'
+      // },
+      // diagonality: {
+      //   category: 'powerUp',
+      //   activation: 'instant'
+      // },
+      // magnet: {
+      //   category: 'powerUp',
+      //   activation: 'persistent'
+      // },
     }
   },
   hazard: {
     weight: 2,
     items: {
-      missedTurn: {
-        category: 'hazard',
-        activation: 'instant'
-      },
+      // missedTurn: {
+      //   category: 'hazard',
+      //   activation: 'instant'
+      // },
       poison: {
         category: 'hazard',
-        activation: 'instant'
+        activation: 'instant',
+        action: (player, cellStates) => {
+          const startingScore = player.score;
+          player.score = 0;
+          return {
+            change: 'scoreAdjustment',
+            playerId: player.id,
+            scoreAdjustment: -startingScore
+          }
+        }
       }
     }
   }
