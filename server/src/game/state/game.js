@@ -227,6 +227,9 @@ const createNewGame = function createNewGame(options) {
       if(obj.originalIndex !== undefined && obj.originalIndex >= 0 && cellStates[obj.originalIndex] === undefined) {
         cellStates[obj.originalIndex] = obj;
         delete obj.originalIndex;
+      } else {
+        cellStates[getUnoccupiedSlot(cellStates)] = obj;
+        delete obj.originalIndex;
       }
     })
   }
