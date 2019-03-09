@@ -124,10 +124,10 @@
             d.column = i % this.columns;
             d.row = Math.floor(i / this.columns)
           }
-          return d && (/(asset|scoring|powerup|hazard)/i).test(d.type) ? d : null;
+          return d && (/(asset|scoring|powerup|hazard)/i).test(d.category) ? d : null;
         })
           .append('g')
-          .attr('class', d => `asset ${d.type} ${d.key}`)
+          .attr('class', d => `asset ${d.category} ${d.type}`)
           .attr('transform', d => `translate(${x(d.column)}, ${y(d.row)})`);
         asset
           .append('circle')
@@ -153,7 +153,7 @@
           // })
           .html(d => {
             let iconName = '';
-            switch(d.key) {
+            switch(d.type) {
               case 'addTime' :
                 iconName = 'stopwatch';
                 break;

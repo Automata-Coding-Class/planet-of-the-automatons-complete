@@ -61,6 +61,7 @@ const gameObjectTypes = (() => {
   };
 
   return {
+    getObject: key => { return Object.assign({}, types[key]); },
     getCategoryKeys: () => categoryKeys,
     getRandomCategoryKey: getRandomCategoryKey,
     getRandomObjectKeyForCategory: getRandomObjectKeyForCategory,

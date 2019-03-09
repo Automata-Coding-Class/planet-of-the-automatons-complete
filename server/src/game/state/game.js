@@ -235,7 +235,7 @@ const createNewGame = function createNewGame(options) {
     const generateGameObject = () => {
       const category = GameObject.getRandomCategoryKey();
       const objectKey = GameObject.getRandomObjectKeyForCategory(category);
-      const newObj = { type: category, id: `${category}_${gameObjects[category].length}`, category: category, key: objectKey };
+      const newObj = Object.assign({ type: objectKey , id: `${category}_${gameObjects[category].length}`}, GameObject.gameObjectTypes.getObject(objectKey));
       gameObjects[category].push(newObj);
       return newObj;
     };
@@ -416,10 +416,10 @@ const createNewGame = function createNewGame(options) {
             let destinationCellOccupant = cellStates[destinationCellIndex];
             if (destinationCellIndex !== -1) {
               if (
-                destinationCellOccupant !== undefined && destinationCellOccupant.type === 'asset') {
+                destinationCellOccupant !== undefined && (/(asset|scoring)/i).test(destinationCellOccupant.category)) {
                 const asset = removeEntry(destinationCellIndex);
                 if (playerData.has(playerId)) {
-                  playerData.get(playerId).score++;
+                  playerData.get(playerId).score += destinationCellOccupant.value;
                   logger.info(`*** UPDATED SCORE FOR PLAYER '${playerId}': ${playerData.get(playerId).score}`);
                 }
                 destinationCellOccupant = undefined;

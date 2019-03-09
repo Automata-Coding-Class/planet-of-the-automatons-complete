@@ -14,7 +14,7 @@ describe('game-object', () => {
     });
     test('keysByCategory', () => {
       const result = GameObject.gameObjectTypes.getObjectKeysByCategory('powerUp') ;
-      expect(result).toEqual(['addTime', 'blaster', 'bomb', 'diagonality']);
+      expect(result).toEqual(['addTime', 'blaster', 'bomb', 'diagonality', 'magnet']);
     })
   })
 });
