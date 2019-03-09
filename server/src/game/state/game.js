@@ -41,6 +41,7 @@ const createNewGame = function createNewGame(options) {
   const numberOfAssets = Math.round(getNumberOfCells() * options.percentAssets);
 
   let frameId = -1;
+  let totalAvailablePoints = 0;
 
   function getNumberOfCells() {
     return cellStates.length;
@@ -227,21 +228,13 @@ const createNewGame = function createNewGame(options) {
     }
     distributeObstacles(numberOfObstacles);
 
-    const gameObjects = {
-      scoring: [],
-      powerUp: [],
-      hazard: []
-    };
-    const generateGameObject = () => {
-      const category = GameObject.getRandomCategoryKey();
-      const objectKey = GameObject.getRandomObjectKeyForCategory(category);
-      const newObj = Object.assign({ type: objectKey , id: `${category}_${gameObjects[category].length}`}, GameObject.gameObjectTypes.getObject(objectKey));
-      gameObjects[category].push(newObj);
-      return newObj;
-    };
-    for (let i = 0; i < numberOfAssets; i++) {
-      placeGameObject(generateGameObject());
-    }
+    const gameObjectList = GameObject.createGameObjectList(numberOfAssets);
+    gameObjectList.forEach(gameObj => {
+      if(gameObj.category === 'scoring') {
+        totalAvailablePoints += gameObj.value;
+      }
+      placeGameObject(gameObj);
+    });
   }
 
   function start(players) {
@@ -370,7 +363,8 @@ const createNewGame = function createNewGame(options) {
         packets: framePacketData
       },
       playerData: getCurrentPlayerStates(),
-      totalAssets: numberOfAssets
+      totalAssets: numberOfAssets,
+      totalAvailablePoints: totalAvailablePoints
     }
   }
 

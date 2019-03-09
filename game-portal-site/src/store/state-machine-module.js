@@ -34,7 +34,8 @@ export default {
     boardGrid: {
       rows: 5,
       columns: 5,
-      totalAssets: 0
+      totalAssets: 0,
+      totalAvailablePoints: 0,
     },
     stylingOptions: {
       iconNames: ['cat', 'dog', 'crow', 'fish', 'dove', 'frog',
@@ -125,6 +126,7 @@ export default {
         state.gameTime.limit = gameData.parameters.duration;
         state.gameTime.elapsed = Math.min(gameData.elapsedTime, gameData.parameters.duration);
         state.boardGrid.totalAssets = gameData.totalAssets;
+        state.boardGrid.totalAvailablePoints = gameData.totalAvailablePoints;
       }
     },
     newPlayerAttributesReceived: function (state, playerAttributes) {
