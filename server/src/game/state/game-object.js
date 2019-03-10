@@ -16,10 +16,12 @@ const categories = {
   },
   powerUp: {
     weight: 3,
+    weighted: true,
     items: {
       addTime: {
         category: 'powerUp',
         activation: 'instant',
+        weight: 1,
         action: (player, cellStates) => {
           return {
             change: 'timeAdjustment',
@@ -32,10 +34,11 @@ const categories = {
       //   category: 'powerUp',
       //   activation: 'user'
       // },
-      // bomb: {
-      //   category: 'powerUp',
-      //   activation: 'user'
-      // },
+      bomb: {
+        category: 'powerUp',
+        activation: 'user',
+        weight: 3
+      },
       // diagonality: {
       //   category: 'powerUp',
       //   activation: 'instant'
@@ -108,8 +111,21 @@ module.exports.createGameObjectList = totalItems => {
   }, 0);
   Object.entries(categories).forEach(categoryEntry => {
     const itemCount = Math.round(totalItems * categoryEntry[1].weight / totalWeight);
-    for (let i = 0; i < itemCount; i++) {
-      gameObjectList.push(createGameObject(categoryEntry[0], getRandomObjectKeyForCategory(categoryEntry[0]), {id: `${categoryEntry[0]}_${i}`}));
+    if (categoryEntry[1].weighted) {
+      const totalItemWeight = Object.values(categoryEntry[1].items).reduce((totalItemWeight, item) => {
+        totalItemWeight += item.weight;
+        return totalItemWeight;
+      }, 0);
+      Object.entries(categoryEntry[1].items).forEach(item => {
+        const entryItemCount = Math.round(itemCount * item[1].weight / totalItemWeight);
+        for (let j = 0; j < entryItemCount; j++) {
+          gameObjectList.push(createGameObject(categoryEntry[0], item[0], {id: `${categoryEntry[0]}_${item[0]}_${j}`}));
+        }
+      });
+    } else {
+      for (let i = 0; i < itemCount; i++) {
+        gameObjectList.push(createGameObject(categoryEntry[0], getRandomObjectKeyForCategory(categoryEntry[0]), {id: `${categoryEntry[0]}_${i}`}));
+      }
     }
   });
   return gameObjectList;
