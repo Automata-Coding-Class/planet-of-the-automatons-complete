@@ -31,6 +31,7 @@ export default {
     newGameRows: 12,
     newGameColumns: 12,
     newGameDuration: 30,
+    percentAssets: 10,
     boardGrid: {
       rows: 5,
       columns: 5,
@@ -67,6 +68,9 @@ export default {
     },
     newGameDurationChanged: function (state, newValue) {
       state.newGameDuration = newValue;
+    },
+    percentAssetsChanged: function(state, newValue) {
+      state.percentAssets = newValue;
     },
     setBoardDimensions: function (state, grid) {
       console.log(`setBoardDimensions:`, grid);

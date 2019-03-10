@@ -39,7 +39,8 @@ const createNewGame = function createNewGame(options) {
   const cellStates = new Array(numberOfRows * numberOfColumns);
   const statusManager = createGameStateMachine();
   const playerData = new Map();
-  const numberOfAssets = Math.round(getNumberOfCells() * options.percentAssets);
+  const numberOfAssets = (getNumberOfCells() - Math.round(getNumberOfCells() * options.percentObstacles))
+    * options.percentAssets;
 
   let frameId = -1;
   let totalAvailablePoints = 0;

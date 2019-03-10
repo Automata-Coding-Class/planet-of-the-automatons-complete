@@ -2,28 +2,29 @@
     <div class="component game-controls">
         <h3>Game Setup</h3>
         <span class="control-group engine-selector">
-            <label for="gameEngineSelect">Engine</label>
+            <label for="gameEngineSelect" :title="selectedRulesEngine">Engine</label>
             <button class="refresh" @click="refreshRulesEngineList">
                 <span class="icon"></span><span class="label">refresh</span>
             </button>
                 <b-form-select id="gameEngineSelect" v-model="selectedRulesEngine" :options="availableRulesEngines" class="mb-3" />
             <b-button @click="testRulesEngine">Test</b-button>
         </span>
-        <p>rules engine address: {{selectedRulesEngine}}</p>
         <form class="control-group">
             <fieldset class="control-group" :disabled="newGameButtonDisabled">
-                <span class="control-group"><input type="text" id="newGameColumnsInput"
-                                                   v-model="newGameColumns"><label
-                        for="newGameColumnsInput">columns</label></span>
-                <span class="decorator">X</span>
                 <span class="control-group"><input type="text" id="newGameRowsInput"
                                                    v-model="newGameRows"/><label
-                        for="newGameRowsInput">rows</label></span>
+                        for="newGameRowsInput">rows x columns</label></span>
+
             </fieldset>
             <fieldset class="control-group">
                 <span class="control-group"><input type="text" id="gameLengthInput"
                                                    v-model="newGameDuration"><label
                         for="gameLengthInput">seconds long</label></span>
+            </fieldset>
+            <fieldset class="control-group">
+                <span class="control-group"><input type="text" id="percentAssetInput"
+                                                   v-model="percentAssets"><label
+                        for="percentAssetInput">% assets</label></span>
             </fieldset>
             <b-button size="sm" variant="secondary" @click="newGame"
                       :disabled="newGameButtonDisabled">New Game
@@ -77,6 +78,7 @@
         },
         set: function (newValue) {
           this.$store.commit('stateMachine/newGameRowsChanged', newValue);
+          this.$store.commit('stateMachine/newGameColumnsChanged', newValue);
         }
       },
       newGameColumns: {
@@ -93,6 +95,14 @@
         },
         set: function (newValue) {
           this.$store.commit('stateMachine/newGameDurationChanged', newValue);
+        }
+      },
+      percentAssets: {
+        get: function() {
+          return this.$store.state.stateMachine.percentAssets;
+        },
+        set: function(newValue) {
+          this.$store.commit('stateMachine/percentAssetsChanged', newValue);
         }
       },
       newGameButtonDisabled: function () {
@@ -178,6 +188,7 @@
           rows: this.newGameRows,
           columns: this.newGameColumns,
           duration: this.newGameDuration,
+          percentAssets: this.percentAssets,
           engine: this.selectedRulesEngine
         })
       },

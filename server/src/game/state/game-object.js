@@ -15,7 +15,7 @@ const categories = {
     }
   },
   powerUp: {
-    weight: 1,
+    weight: 3,
     items: {
       addTime: {
         category: 'powerUp',

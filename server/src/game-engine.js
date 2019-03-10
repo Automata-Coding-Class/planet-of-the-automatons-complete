@@ -64,9 +64,12 @@ function connect(httpServer) {
   });
   stateServer.on('newGameRequested', options => {
     // TODO: replace this with code that's responsive to the request
+    logger.info(`** NEW GAME REQUESTED: %o`, options);
     const gameOptions = createGameOptions(options)
-      .addPercentObstacles(0.2)
-      .addPercentAssets(0.1);
+      .addPercentObstacles(0.2);
+    if(gameOptions.percentAssets === undefined) {
+      gameOptions.addPercentAssets(0.1);
+    }
     GameFactory.createNewGame(gameOptions)
       .then(gameProxy => {
         logger.info(`GameEngine - new game: %o`, gameProxy);
