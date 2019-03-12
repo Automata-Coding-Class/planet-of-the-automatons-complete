@@ -110,6 +110,15 @@ function getEngineList() {
       }).then(engineList => {
         return getLocalIp()
           .then(localIp => {
+            if (engineList.length === 0) {
+              engineList.push({
+                ip: localIp,
+                port: 5000,
+                name: 'local',
+                isLocal: true,
+                body: {status: 'okay', name: 'local'}
+              });
+            }
             return {localIp: localIp, engines: engineList};
           })
 
@@ -147,8 +156,12 @@ class GameFactory extends EventEmitter {
   getAvailableRulesEngines() {
     return getEngineList()
       .then(rulesEnginesList => {
+        // if the rules engine lookup is failing, it can be hacked here. This:
+        // rulesEnginesList.unshift({ip: 'localhost', port: 5000, name: 'local', isLocal: true});
+        // or this:
+        // rulesEngineList = [{ip: 'localhost', port: 5000, name: 'local', isLocal: true}];
         console.log(`rulesEnginesList`, rulesEnginesList);
-        return {engines: rulesEnginesList };
+        return {engines: rulesEnginesList};
       });
   }
 
