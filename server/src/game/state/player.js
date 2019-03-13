@@ -13,6 +13,36 @@ const createPlayer = rawPlayerData => {
     return score;
   };
 
+  const getAsset = (category, id, removeAfterRetrieve) => {
+    let asset = undefined;
+    const assetList = assets[category];
+    if(assetList !== undefined) {
+      for (let i = 0; i < assetList.length; i++) {
+        if(assetList[i].id === id) {
+          asset = assetList[i];
+          assetList.splice(i,1);
+          break;
+        }
+      }
+    }
+    return asset;
+  };
+
+  const getAssetByType = (category, type, removeAfterRetrieve) => {
+    let asset = undefined;
+    const assetList = assets[category];
+    if(assetList !== undefined) {
+      for (let i = 0; i < assetList.length; i++) {
+        if(assetList[i].type === type) {
+          asset = assetList[i];
+          assetList.splice(i,1);
+          break;
+        }
+      }
+    }
+    return asset;
+  };
+
   return {
     getScore : getScore,
     assets: assets,
@@ -22,7 +52,8 @@ const createPlayer = rawPlayerData => {
         assets[asset.category] = [];
       }
       assets[asset.category].push(Object.assign(asset, {originalIndex: originalIndex}));
-    }
+    },
+    getAssetByType: getAssetByType
   };
 };
 

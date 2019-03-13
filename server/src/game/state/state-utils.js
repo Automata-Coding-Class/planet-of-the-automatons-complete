@@ -100,13 +100,20 @@ module.exports.getNeighbourCellValues = function(sparseArray, cols, index, edgeV
   return {up: up, right: right, down: down, left: left};
 };
 
-module.exports.getNeighbourCellIndices = function(sparseArray, cols, index, edgeValue = undefined) {
+module.exports.getNeighbourCellIndices = function(sparseArray, cols, index, edgeValue = undefined, includeDiagonal) {
   const rows = Math.ceil(sparseArray.length / cols);
   const up = Math.floor(index/cols) === 0 ? edgeValue : index - cols;
   const right = index % cols === cols - 1 ? edgeValue : index + 1;
   const down = Math.floor(index / cols) === rows - 1 ? edgeValue: index + cols;
   const left = index % cols === 0 ? edgeValue : index - 1;
-  return {up: up, right: right, down: down, left: left};
+  const response = {up: up, right: right, down: down, left: left};
+  if(includeDiagonal) {
+    response.upLeft = up !== undefined && left !== undefined ? up - 1 : undefined;
+    response.upRight = up !== undefined && right !== undefined ? up + 1 : undefined;
+    response.downLeft = down !== undefined && left !== undefined ? down - 1 : undefined;
+    response.downRight = down !== undefined && right !== undefined ? down + 1 : undefined;
+  }
+  return response;
 };
 
 

@@ -1,16 +1,21 @@
+const { getNeighbourCellIndices } = require('./state-utils');
+
 const categories = {
   scoring: {
     weight: 5,
+    weighted: true,
     items: {
       multiPoint: {
         category: 'scoring',
         activation: 'instant',
-        value: 3
+        value: 3,
+        weight: 1
       },
       point: {
         category: 'scoring',
         activation: 'instant',
-        value: 1
+        value: 1,
+        weight: 4
       },
     }
   },
@@ -22,11 +27,11 @@ const categories = {
         category: 'powerUp',
         activation: 'instant',
         weight: 1,
-        action: (player, cellStates) => {
+        action: (player) => {
           return {
             change: 'timeAdjustment',
             playerId: player.id,
-            timeAdjustment: 10
+            timeAdjustment: 2
           }
         }
       },
@@ -37,7 +42,22 @@ const categories = {
       bomb: {
         category: 'powerUp',
         activation: 'user',
-        weight: 3
+        weight: 3,
+        action: (player, cellStates, playerIndex, numberOfColumns) => {
+          const neighbourCellIndices = getNeighbourCellIndices(cellStates, numberOfColumns, playerIndex,undefined, true);
+          Object.values(neighbourCellIndices).forEach(cellIndex => {
+            console.log(`cellStates[${cellIndex}]:`, cellStates[cellIndex]);
+            if(cellStates[cellIndex] !== undefined) {
+              if (cellStates[cellIndex].type === 'obstacle' || cellStates[cellIndex].category === 'hazard') {
+                cellStates[cellIndex] = undefined;
+              } else if(cellStates[cellIndex].category === 'scoring') {
+                const scoringAsset = cellStates[cellIndex];
+                cellStates[cellIndex] = undefined;
+                player.addAsset(cellIndex, scoringAsset);
+              }
+            }
+          });
+        }
       },
       // diagonality: {
       //   category: 'powerUp',
@@ -59,7 +79,7 @@ const categories = {
       poison: {
         category: 'hazard',
         activation: 'instant',
-        action: (player, cellStates) => {
+        action: (player) => {
           const startingScore = player.getScore();
           const assets = player.assets.scoring !== undefined ? player.assets.scoring : [];
           player.assets.scoring = [];

@@ -440,13 +440,20 @@ const createNewGame = function createNewGame(options) {
         const playerIndex = playerPositions[playerId].index;
         const response = playerResponseData[playerId];
         // const neighbourCells = getNeighbourCellValues(cellStates, numberOfColumns, playerIndex);
+        const player = playerData.get(playerId);
         switch (response.action.type) {
+          case 'usePowerUp' :
+            logger.info(`player has requested the use of a powerUp: %o`, response.action);
+            const powerUp = player.getAssetByType(response.action.powerUp.category, response.action.powerUp.type, true);
+            if(powerUp !== undefined && powerUp.action !== undefined) {
+              powerUp.action(player, cellStates, playerIndex, numberOfColumns);
+            }
+            break;
           case 'move':
           default:
             const destinationCellIndex = getRelativeIndex(playerIndex, numberOfRows, numberOfColumns, response.action.direction);
             let destinationCellOccupant = cellStates[destinationCellIndex];
             if (destinationCellIndex !== -1) {
-              const player = playerData.get(playerId);
               if (
                 destinationCellOccupant !== undefined && (/(asset|scoring)/i).test(destinationCellOccupant.category)) {
                 const asset = removeEntry(destinationCellIndex);
@@ -475,6 +482,8 @@ const createNewGame = function createNewGame(options) {
                       break;
                   }
                   changeSummary.push(delta);
+                } else if(asset.activation === 'user' && asset.action !== undefined) {
+                  player.addAsset(destinationCellIndex, asset);
                 }
               } else if (destinationCellOccupant === undefined) {
                 movePlayer(playerIndex, destinationCellIndex, playerId);
